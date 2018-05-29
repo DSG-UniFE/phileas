@@ -16,18 +16,19 @@ module Phileas
       @time_dist = ERV::Distribution.new(time_between_message_generation_dist)
     end
 
-    def generate
-      # ASSUMPTION: we assume that VoI of a raw data message does not change
-      # significantly as it travels from the data source to the processing
-      # device
-      [ 
+    def generate(time)
+      [
         @time_dist.sample,
-        {
-          content_type: @content_type,
+        Message.new(
           size: @size_dist.sample,
+          content_type: @content_type,
+          starting_voi: @voi_dist.sample,
+          originating_time: time,
           originating_location: @location,
-          originating_voi: @voi.sample,
-        }
+          starting_voi: @voi.sample,
+          time_decay: nil,
+          location_decay: nil
+        )
       ]
     end
   end
@@ -59,10 +60,14 @@ module Phileas
   end
 
   class DataSourceFactory
-    def self.create(voi_dist:, location:, content_type:)
-      dist = Distribution.new(voi_dist)
-      DataSource.new(voi_dist: dist, location: location, 
-                     content_type: content_type)
+    def self.create(location:, content_type:, voi_dist:, message_size_dist:, time_between_message_generation_dist:)
+      DataSource.new(
+        location: location,
+        content_type: content_type,
+        voi_dist: voi_dist,
+        message_size_dist: message_size_dist,
+        time_between_message_generation_dist: time_between_message_generation_dist,
+      )
     end
   end
 

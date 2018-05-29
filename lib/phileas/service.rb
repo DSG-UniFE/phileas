@@ -3,40 +3,51 @@
 
 module Phileas
 
-  class ProcessingPolicy
-    def initialize(aggregation_window_size_dist:, aggregated_message_size_dist:, voi_multiplier:)
+  class AggregationProcessingPolicy
+    def initialize(aggregation_window_size_dist:, aggregated_message_size_dist:, voi_multiplier:, resource_requirements:)
       @aggregation_window_size_dist = aggregation_window_size_dist
       @aggregated_message_size_dist = aggregated_message_size_dist
       # ASSUMPTION: for the moment we adopt the simple policy of generating the
-      # VoI of the CRIO message by multiplying the hignest VoI of the received
-      # messages by a constant factor.
+      # VoI of the CRIO message by multiplying the average VoI of the received
+      # messages by a constant factor, called VoI multiplier.
       @voi_multiplier = voi_multiplier
-      @messages = []
-      @messages_to_next_aggregation = @aggregation_window_size_dist.sample
+      @recorded_vois = []
+      @messages_to_next_aggregation = @aggregation_window_size_dist.next
+      @resources_required = resource_requirements
+      @resources_assigned = resource_requirements
     end
 
-    def process_message(m, tstamp)
+    def assign_resources(quantity)
+      @resources_assigned = quantity
+    end
+
+    def process_message_with_voi(value)
+      # reject messages if resources are not sufficient
+      # for the moment we implement a linear message drop policy
+      threshold = @resources_assigned / @resources_required
+      if (threshold < 1.0)
+        return if rand > threshold
+      end
+      
       @messages_to_next_aggregation -= 1
       # check whether to trigger aggregation
-      if @messages_to_next_aggregation == 0 
+      if @messages_to_next_aggregation == 0
         # reset messages array and messages_to_next_aggregation counter
-        @messages = []
-        @messages_to_next_aggregation = @aggregation_window_size_dist.sample
-        # return message
+        @recorded_vois = []
+        @messages_to_next_aggregation = @aggregation_window_size_dist.next
+
+        # calculate average voi
+        total_voi = @recorded_vois.inject(0.0) {|acc,el| acc += el }
+        average_voi = total_voi / @recorded_vois.size.to_f
+
+        # return size and voi message attributes
         {
-          message: Message.new(),
-          # TODO: we need to consider processing times to add to tstamp
-          tracker: VoITracker.new(
-            start_voi: @voi.sample,
-            start_time: tstamp,
-            time_decay: { type: :exponential, half_life: 10.seconds },
-            start_location: @location,
-            space_decay: { type: :exponential, half_life: 10.seconds }
-          ),
+          size: @aggregated_message_size_dist.next,
+          starting_voi: average_voi * @voi_multiplier
         }
       else
         @messages_to_next_aggregation -= 1
-        @messages << m # do we actually need the timestamp?
+        @recorded_vois << value
         nil
       end
     end
@@ -45,15 +56,60 @@ module Phileas
   class Service
     extend Forwardable
 
-    # implements the incoming_message method
-    def_delegator :@processing_policy, :process, :incoming_message
     # implements the device_location method
-    def_delegator :@device, :location, :device_location
+    def_delegators :@device, :location, :device_location
+    # called by device
+    def_delegators :@processing_policy, :assign_resources 
 
-    def initialize(device:, requirements:, processing_policy:)
-      @data_source = data_source
-      @requirements = requirements
-      @processing_policy = processing_policy
+    def initialize(device:, input_content_type: output_message_type:,
+                   output_content_type:, resource_requirements:, time_decay:,
+                   space_decay:, processing_policy:)
+      @device                = device
+      @input_content_type    = input_content_type
+      @output_message_type   = output_message_type
+      @output_content_type   = output_content_type
+      # @resource_requirements = resource_requirements
+      @time_decay            = time_decay
+      @space_decay           = space_decay
+
+      # prepare processing policy configuration
+      processing_policy_configuration = processing_policy.dup
+
+      # get class name that corresponds to the requested distribution
+      processing_policy_type = processing_policy_configuration.delete(:type)
+      klass_name = processing_policy_type.split('_').map(&:capitalize).join + 'ProcessingPolicy'
+
+      # add resource requirements
+      processing_policy_configuration.merge!(resource_requirements: resource_requirements)
+
+      # create processing_policy object
+      @processing_policy = Phileas.const_get(klass_name).new(processing_policy_configuration)
+    end
+
+    def incoming_message(msg, time)
+      voi_left = msg.remaining_value_at(time: time, location: @device.location)
+      size_and_voi_attrs = @processing_policy.process_message_with_voi(voi_left)
+      unless size_and_voi_attrs.nil?
+        attrs = {
+          type:                 @output_message_type,
+          content_type:         @output_content_type,
+          originating_time:     time,
+          originating_location: @location,
+          time_decay:           @time_decay,
+          space_decay:          @space_decay,
+        }
+        Message.new(attrs.merge!(size_and_voi_attrs))
+      end
+    end
+  end
+
+  class ServiceFactory
+    # create and activate service
+    def self.create(args={})
+      serv = Service.new(args)
+      dev = serv.device
+      dev.add_service(serv)
+      serv
     end
   end
 
