@@ -1,18 +1,20 @@
 # frozen_string_literal: true
 
-require 'forwardable'
 require 'geo/coord'
 
 
 module Phileas
 
   class Location
-    extend Forwardable
 
-    def_delegator :@coords, :distance
+    attr_reader :coords
 
     def initialize(latitude:, longitude:)
       @coords = Geo::Coord.new(latitude, longitude)
+    end
+
+    def distance(loc)
+      @coords.distance(loc.coords)
     end
   end
 

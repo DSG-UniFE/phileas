@@ -182,7 +182,7 @@ module Phileas
       # (perhaps in a dispatch_low_maturity_message method?)
       def dispatch_raw_data_message(msg)
         @active_service_repository.find_interested_services(input_content_type: msg.content_type,
-                                                            input_message_type: :raw_data).each do |serv|
+                                                            input_message_type: :raw_data) do |serv|
           loc1 = msg.originating_location
           loc2 = serv.device_location
           transmission_time = @latency_manager.calculate_trasmission_time_between(loc1, loc2)
@@ -196,7 +196,7 @@ module Phileas
 
       def dispatch_io_message(msg)
         @active_service_repository.find_interested_services(input_content_type: msg.content_type,
-                                                            input_message_type: :io).each do |serv|
+                                                            input_message_type: :io) do |serv|
           loc1 = msg.originating_location
           loc2 = serv.device_location
           transmission_time = @latency_manager.calculate_trasmission_time_between(loc1, loc2)
@@ -209,7 +209,7 @@ module Phileas
       end
 
       def dispatch_crio_message(msg)
-        @user_group_repository.find_interested_user_groups(msg.content_type).each do |ug|
+        @user_group_repository.find_interested_user_groups(msg.content_type) do |ug|
           loc1 = msg.originating_location
           loc2 = serv.device_location
           transmission_time = @latency_manager.calculate_trasmission_time_between(loc1, loc2)

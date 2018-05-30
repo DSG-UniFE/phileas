@@ -22,11 +22,11 @@ module Phileas
       if cloud_to_edge_communication(loc1, loc2)
         # sample with truncation for non-positive values
         until (res = @c2e_latency_rv.next) > 0.0; end
-      elsif cloud_to_cloud_communication(msg, serv)
+      elsif cloud_to_cloud_communication(loc1, loc2)
         # sample with truncation for non-positive values
         until (res = @c2c_latency_rv.next) > 0.0; end
       else # edge to edge communication
-        if distance <= PROXIMITY_THRESHOLD
+        if loc1.distance(loc2) <= PROXIMITY_THRESHOLD
           # sample with truncation for non-positive values
           until (res = @e2e_latency_rv.next) > 0.0; end
         end

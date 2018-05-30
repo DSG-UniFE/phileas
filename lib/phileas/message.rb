@@ -5,7 +5,7 @@ module Phileas
 
   class Message
 
-    attr_reader :size, :content_type, :type
+    attr_reader :size, :content_type, :type, :originating_location
 
     def initialize(size:, type:, content_type:, starting_voi:,
                    originating_time:, originating_location:, time_decay:,
