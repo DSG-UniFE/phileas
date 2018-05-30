@@ -16,12 +16,14 @@ module Phileas
       @starting_voi         = starting_voi
       @originating_time     = originating_time
       @originating_location = originating_location
-      @time_decay_function  = VoIDecayCalculator.new(@originating_time, time_decay)
+      @time_decay_function  = ValueDecayCalculator.new(initial_value: @originating_time,
+                                                       decay_logic: time_decay)
 
       @space_decay_function = if space_decay.nil?
-        VoIDecayCalculator::NODECAY
+        ValueDecayCalculator::NODECAY
       else
-        VoIDecayCalculator.new(@originating_location, space_decay)
+        ValueDecayCalculator.new(initial_value: @originating_location,
+                                 decay_logic: space_decay)
       end
     end
 
@@ -29,9 +31,16 @@ module Phileas
       if @originating_time > time
         raise ArgumentError, "Requested VoI evaluation time (#{time}) preceedes message originating time (#{@originating_time})!"
       end
-      @starting_voi *
-        @time_decay_function.remaining_value_at(time) *
-        @space_decay_function.remaining_value_at(location)
+
+      spatial_decay = if @originating_location == :cloud or location == :cloud
+        # no spatial decay if cloud is involved
+        1.0
+      else
+        @space_decay_function.remaining_value_at(@originating_location.distance(location))
+      end
+
+      @starting_voi * spatial_decay *
+        @time_decay_function.remaining_value_at(time-@originating_time)
     end
 
   end
