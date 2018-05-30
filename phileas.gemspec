@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["mauro.tortonesi@unife.it"]
 
   spec.summary       = %q{A classy and adventurous Fog Computing simulator}
-  spec.description   = %q{TODO: Write a longer description or delete this line.}
+  spec.description   = %q{A classy and adventurous Fog Computing simulator}
   spec.homepage      = "https://github.com/DSG-UniFE/phileas"
   spec.license       = "MIT"
 
@@ -34,7 +34,7 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = ">= 2.3.0"
 
   spec.add_dependency "as-duration", "~> 0.1.0"
-  spec.add_dependency "erv", ">= 0.3.3"
+  spec.add_dependency "erv", ">= 0.3.4"
   spec.add_dependency "geo_coord", "~> 0.1.0"
 
   spec.add_development_dependency "bundler", "~> 1.16"
