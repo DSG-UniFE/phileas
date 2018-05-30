@@ -1,5 +1,3 @@
-require "phileas/version"
-
-module Phileas
-  # Your code goes here...
-end
+require 'phileas/version'
+require 'phileas/configuration'
+require 'phileas/simulation'

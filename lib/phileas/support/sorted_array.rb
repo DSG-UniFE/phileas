@@ -1,4 +1,4 @@
-module SISFC
+module Phileas
   # the SortedArray class was taken from the ruby cookbook
   class SortedArray < Array
     def initialize(*args, &sort_by)

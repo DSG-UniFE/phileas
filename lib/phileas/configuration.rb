@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require 'date'
+require 'as-duration'
+
 require_relative './support/dsl_helper'
 
 
@@ -11,6 +14,7 @@ module Phileas
                  :data_sources,
                  :devices,
                  :user_groups,
+                 :service_types,
                  :service_activations,
                  :start_time,
                  :duration,
@@ -31,10 +35,14 @@ module Phileas
     end
 
     def validate
-      # convert datetimes and integers into floats
-      @start_time      = @start_time.to_f
-      @duration        = @duration.to_f
-      @warmup_duration = @warmup_duration.to_f
+      @start_time = @start_time&.to_time&.to_f
+      raise "Invalid simulation start time!" unless @start_time
+
+      @duration = @duration&.to_f
+      raise "Invalid simulation duration!" unless @duration
+
+      @warmup_duration = @warmup_duration&.to_f
+      raise "Invalid simulation warmup duration!" unless @warmup_duration
     end
 
     def self.load_from_file(filename)

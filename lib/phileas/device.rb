@@ -19,14 +19,14 @@ module Phileas
     def add_service(s)
       raise "Service already existing" if @services.include?(s)
       @services << s
-      @total_resources_required += s.required_resources
+      @total_resources_required += s.resource_requirements
       reallocate_resources
     end
 
     # TODO: CHECK IF WE NEED TO KEEP TRACK OF CURRENT TIME HERE
     def remove_service(s)
       raise "No such service" if @services.delete(s).nil?
-      @total_resources_required -= s.required_resources
+      @total_resources_required -= s.resource_requirements
       reallocate_resources
     end
 
@@ -37,7 +37,7 @@ module Phileas
 
     private
       def reallocate_resources
-        @services.each {|x| x.assign_resources(x.required_resources / @total_resources_required) }
+        @services.each {|x| x.assign_resources(x.resource_requirements / @total_resources_required) }
       end
   end
 
@@ -45,11 +45,13 @@ module Phileas
     extend Forwardable
     def_delegators :@resource_assignment_policy, :add_service, :remove_service, :available_resources
 
-    def initialize(resources:)
+    attr_reader :location
+
+    def initialize(resources:, location:)
+      @resources = resources
+      @location = location
       # NOTE: for the moment, we use only a weighted resource assignment policy
-      @resource_assignment_policy = WeightedFairResourceAssignmentPolicy.new(resources)
-      # TODO: CHECK IF WE NEED TO KEEP TRACK OF RESOURCE POOL DIRECTLY ON DEVICE
-      # @resources = resources
+      @resource_assignment_policy = WeightedFairResourceAssignmentPolicy.new(resources: @resources, location: @location)
     end
 
     def type
@@ -75,7 +77,7 @@ module Phileas
 
     # TODO: CHECK IF WE NEED TO KEEP TRACK OF CURRENT TIME HERE
     def available_resources
-      Math::Infinity
+      Float::INFINITY
     end
 
     def type
@@ -87,7 +89,7 @@ module Phileas
     def self.create(type:, resources:, location:)
       case type
       when :edge
-        EdgeDevice.new(resources: resources, location:)
+        EdgeDevice.new(resources: resources, location: location)
       when :cloud
         CloudPlatform.new
       else

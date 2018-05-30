@@ -5,7 +5,7 @@ require 'erv'
 
 module Phileas
   # TODO: check how the 'geo/coord' gem calculates distances
-  PROXIMITY_THRESHOLD = 500.meters
+  PROXIMITY_THRESHOLD = 500 # meters
 
   class LatencyManager
     def initialize

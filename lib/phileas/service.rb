@@ -5,8 +5,8 @@ module Phileas
 
   class AggregationProcessingPolicy
     def initialize(aggregation_window_size_dist:, aggregated_message_size_dist:, voi_multiplier:, resource_requirements:)
-      @aggregation_window_size_dist = aggregation_window_size_dist
-      @aggregated_message_size_dist = aggregated_message_size_dist
+      @aggregation_window_size_dist = ERV::RandomVariable.new(aggregation_window_size_dist)
+      @aggregated_message_size_dist = ERV::RandomVariable.new(aggregated_message_size_dist)
       # ASSUMPTION: for the moment we adopt the simple policy of generating the
       # VoI of the CRIO message by multiplying the average VoI of the received
       # messages by a constant factor, called VoI multiplier.
@@ -28,7 +28,7 @@ module Phileas
       if (threshold < 1.0)
         return if rand > threshold
       end
-      
+
       @messages_to_next_aggregation -= 1
       # check whether to trigger aggregation
       if @messages_to_next_aggregation == 0
@@ -57,18 +57,21 @@ module Phileas
     extend Forwardable
 
     # implements the device_location method
-    def_delegators :@device, :location, :device_location
+    def_delegator :@device, :location, :device_location
     # called by device
-    def_delegators :@processing_policy, :assign_resources 
+    def_delegator :@processing_policy, :assign_resources
 
-    def initialize(device:, input_content_type: output_message_type:,
+    attr_reader :device, :resource_requirements, :input_message_type, :input_content_type
+
+    def initialize(device:, input_message_type:, input_content_type:, output_message_type:,
                    output_content_type:, resource_requirements:, time_decay:,
                    space_decay:, processing_policy:)
       @device                = device
       @input_content_type    = input_content_type
+      @input_message_type    = input_message_type
       @output_message_type   = output_message_type
       @output_content_type   = output_content_type
-      # @resource_requirements = resource_requirements
+      @resource_requirements = resource_requirements
       @time_decay            = time_decay
       @space_decay           = space_decay
 
@@ -76,7 +79,7 @@ module Phileas
       processing_policy_configuration = processing_policy.dup
 
       # get class name that corresponds to the requested distribution
-      processing_policy_type = processing_policy_configuration.delete(:type)
+      processing_policy_type = processing_policy_configuration.delete(:type)&.to_s
       klass_name = processing_policy_type.split('_').map(&:capitalize).join + 'ProcessingPolicy'
 
       # add resource requirements
@@ -106,7 +109,7 @@ module Phileas
   class ServiceFactory
     # create and activate service
     def self.create(args={})
-      serv = Service.new(args)
+      serv = Service.new(*args)
       dev = serv.device
       dev.add_service(serv)
       serv

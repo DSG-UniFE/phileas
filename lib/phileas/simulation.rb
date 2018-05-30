@@ -1,8 +1,14 @@
 # frozen_string_literal: true
 
 require_relative './support/sorted_array'
+require_relative './data_source'
+require_relative './device'
+require_relative './event'
 require_relative './latency_manager'
 require_relative './location'
+require_relative './service'
+require_relative './service_repository'
+require_relative './user_group'
 
 
 module Phileas
@@ -14,14 +20,14 @@ module Phileas
       @configuration = configuration
 
       # prepare location repository
-      @location_repository = Hash [
+      @location_repository = Hash[ 
         @configuration.locations.map do |loc_id,loc_conf|
           [ loc_id, LocationFactory.create(loc_conf) ]
         end
       ]
 
       # prepare data source repository
-      @data_source_repository = Hash [
+      @data_source_repository = Hash[ 
         @configuration.data_sources.map do |ds_id,ds_conf|
           dsc = ds_conf.dup
           loc_id = dsc.delete(:location_id)
@@ -30,7 +36,7 @@ module Phileas
       ]
 
       # prepare device repository
-      @device_repository = Hash [
+      @device_repository = Hash[ 
         @configuration.devices.map do |dev_id,dev_conf|
           dvc = dev_conf.dup
           loc_id = dvc.delete(:location_id)
@@ -39,7 +45,7 @@ module Phileas
       ]
 
       # prepare user group repository
-      @user_group_repository = Hash [
+      @user_group_repository = Hash[
         @configuration.user_groups.map do |ug_id,ug_conf|
           ugc = ug_conf.dup
           loc_id = ugc.delete(:location_id)
@@ -48,13 +54,14 @@ module Phileas
       ]
 
       # prepare service type repository
-      @service_type_repository = Hash [
-        @configuration.service_types.map do |st_id,st_conf|
-          stc = st_conf.dup
-          ds_id = stc.delete(:data_source_id)
-          [ st_id, ServiceTypeFactory.create(stc.merge!(data_source: @data_source_repository[ds_id])) ]
-        end
-      ]
+      @service_type_repository = @configuration.service_types
+      # @service_type_repository = Hash[
+      #   @configuration.service_types.map do |st_id,st_conf|
+      #     stc = st_conf.dup
+      #     ds_id = stc.delete(:data_source_id)
+      #     [ st_id, stc.merge!(data_source: @data_source_repository[ds_id]) ]
+      #   end
+      # ]
 
       @latency_manager = LatencyManager.new
     end
@@ -72,19 +79,19 @@ module Phileas
       @event_queue = SortedArray.new
 
       # setup initial time
-      @current_time = @start_time
+      @current_time = @configuration.start_time
 
       # create active service repository
       @active_service_repository = ServiceRepository.new
 
       # schedule service_activations
-      @configuration.activate_services.each do |service_activation_conf|
+      @configuration.service_activations.each do |sa_id,service_activation_conf|
         service_type = @service_type_repository[service_activation_conf[:type_id]]
         time = service_activation_conf.dig(:at, :time)
         device_id = service_activation_conf.dig(:at, :device_id)
         service_conf = service_type.dup
         service_conf.merge!(device: @device_repository[device_id])
-        new_event(Event::ET_SERVICE_ACTIVATION, [ service_conf ], time)
+        new_event(Event::ET_SERVICE_ACTIVATION, [ service_conf ], time&.to_time&.to_f)
       end
 
       # schedule initial generation of raw message
@@ -147,7 +154,7 @@ module Phileas
 
         when Event::ET_SERVICE_ACTIVATION
           serv = ServiceFactory.create(e.data)
-          @active_service_repository.add_service(serv)
+          @active_service_repository.add(serv)
 
 
         when Event::ET_SERVICE_SHUTDOWN

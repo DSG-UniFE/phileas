@@ -4,8 +4,9 @@
 module Phileas
 
   class UserGroup
-    def initialize(location:, user_dist:)
-      @location = location
+    def initialize(location:, user_dist:, interests:)
+      @interests = interests
+      @location  = location
       @user_dist = user_dist
     end
 
@@ -14,6 +15,12 @@ module Phileas
       # change over time - so (at least) for now we can just ignore the time
       # parameter.
       @user_dist.sample.to_i
+    end
+  end
+
+  class UserGroupFactory
+    def self.create(location:, user_dist:, interests:)
+      UserGroup.new(location: location, user_dist: user_dist, interests: interests)
     end
   end
 

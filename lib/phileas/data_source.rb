@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative './voi_tracker'
+require_relative './message'
 
 require 'erv'
 
@@ -8,31 +9,36 @@ require 'erv'
 module Phileas
 
   class DataSource
-    def initialize(location:, content_type:, voi_dist:, message_size_dist:, time_between_message_generation_dist:)
+    def initialize(location:, output_content_type:, voi_dist:,
+                   message_size_dist:, time_between_message_generation_dist:,
+                   time_decay:, space_decay:)
       @location = location
-      @content_type = content_type
-      @voi_dist  = ERV::Distribution.new(voi_dist)
-      @size_dist = ERV::Distribution.new(message_size_dist)
-      @time_dist = ERV::Distribution.new(time_between_message_generation_dist)
+      @output_content_type = output_content_type
+      @voi_dist  = ERV::RandomVariable.new(voi_dist)
+      @size_dist = ERV::RandomVariable.new(message_size_dist)
+      @time_dist = ERV::RandomVariable.new(time_between_message_generation_dist)
+      @time_decay = time_decay
+      @space_decay = space_decay
     end
 
     def generate(time)
       [
-        @time_dist.sample,
+        @time_dist.next,
         Message.new(
-          size: @size_dist.sample,
-          content_type: @content_type,
-          starting_voi: @voi_dist.sample,
+          size: @size_dist.next,
+          type: :raw_data,
+          content_type: @output_content_type,
+          starting_voi: @voi_dist.next,
           originating_time: time,
           originating_location: @location,
-          starting_voi: @voi.sample,
-          time_decay: nil,
-          location_decay: nil
+          time_decay: @time_decay,
+          space_decay: @space_decay,
         )
       ]
     end
   end
 
+  # TODO: finish implementing this
   class MultistateDataSource
     def initialize(weighted_states)
       @states = weighted_states
@@ -60,13 +66,17 @@ module Phileas
   end
 
   class DataSourceFactory
-    def self.create(location:, content_type:, voi_dist:, message_size_dist:, time_between_message_generation_dist:)
+    def self.create(location:, output_content_type:, voi_dist:,
+                    message_size_dist:, time_between_message_generation_dist:,
+                    time_decay:, space_decay:)
       DataSource.new(
         location: location,
-        content_type: content_type,
+        output_content_type: output_content_type,
         voi_dist: voi_dist,
         message_size_dist: message_size_dist,
         time_between_message_generation_dist: time_between_message_generation_dist,
+        time_decay: time_decay,
+        space_decay: space_decay,
       )
     end
   end
