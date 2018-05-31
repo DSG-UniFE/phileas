@@ -20,14 +20,14 @@ module Phileas
       @configuration = configuration
 
       # prepare location repository
-      @location_repository = Hash[ 
+      @location_repository = Hash[
         @configuration.locations.map do |loc_id,loc_conf|
           [ loc_id, LocationFactory.create(loc_conf) ]
         end
       ]
 
       # prepare data source repository
-      @data_source_repository = Hash[ 
+      @data_source_repository = Hash[
         @configuration.data_sources.map do |ds_id,ds_conf|
           dsc = ds_conf.dup
           loc_id = dsc.delete(:location_id)
@@ -36,7 +36,7 @@ module Phileas
       ]
 
       # prepare device repository
-      @device_repository = Hash[ 
+      @device_repository = Hash[
         @configuration.devices.map do |dev_id,dev_conf|
           dvc = dev_conf.dup
           loc_id = dvc.delete(:location_id)
@@ -55,14 +55,8 @@ module Phileas
 
       # prepare service type repository
       @service_type_repository = @configuration.service_types
-      # @service_type_repository = Hash[
-      #   @configuration.service_types.map do |st_id,st_conf|
-      #     stc = st_conf.dup
-      #     ds_id = stc.delete(:data_source_id)
-      #     [ st_id, stc.merge!(data_source: @data_source_repository[ds_id]) ]
-      #   end
-      # ]
 
+      # setup latency manager
       @latency_manager = LatencyManager.new
     end
 
@@ -126,14 +120,7 @@ module Phileas
           # schedule next raw data message generation
           schedule_next_raw_data_message_generation(data_source)
 
-        when Event::ET_RAW_DATA_MESSAGE_ARRIVAL
-          msg, service = e.data
-          new_msg = service.incoming_message(msg, @current_time)
-          unless new_msg.nil?
-            dispatch_message(new_msg)
-          end
-
-        when Event::ET_IO_MESSAGE_ARRIVAL
+        when Event::ET_RAW_DATA_MESSAGE_ARRIVAL, Event::ET_IO_MESSAGE_ARRIVAL
           msg, service = e.data
           new_msg = service.incoming_message(msg, @current_time)
 
@@ -143,12 +130,13 @@ module Phileas
             dispatch_message(new_msg)
           end
 
+
         when Event::ET_CRIO_MESSAGE_ARRIVAL
           # calculate voi at user group
           msg, user_group = e.data
           msg_voi = msg.remaining_voi_at(time: @current_time,
                                          location: user_group.location)
-          #num_users = user_group.users_interested(content_type: msg.content_type, 
+          #num_users = user_group.users_interested(content_type: msg.content_type,
           #                                        time: @current_time)
           num_users = user_group.users_interested(content_type: msg.content_type)
           total_voi = msg_voi * num_users
@@ -217,11 +205,11 @@ module Phileas
 
       def dispatch_crio_message(msg)
         @user_group_repository.each do |ug_id,ug|
-          ug.interests.each do |interest| 
+          ug.interests.each do |interest|
             if interest[:content_type] == msg.content_type
               loc1 = msg.originating_location
               # loc2 should be the location of the user so the transmission time
-              # is the difference between  
+              # is the difference between
               loc2 = ug.location
               transmission_time = @latency_manager.calculate_trasmission_time_between(loc1, loc2)
               unless transmission_time.nil?

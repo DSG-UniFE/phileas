@@ -29,16 +29,11 @@ module Phileas
         return if rand > threshold
       end
 
-      #do not use negative values
-      #unless @messages_to_next_aggregation == 0
-      #  @messages_to_next_aggregation -= 1
-      #end
       # check whether to trigger aggregation
       if @messages_to_next_aggregation == 0
         #skip if no records
-        if @recorded_vois == []
-          return nil
-        end
+        raise "No VoI information recorded!" if @recorded_vois.empty?
+
         # calculate average voi
         total_voi = @recorded_vois.inject(0.0) {|acc,el| acc += el }
         average_voi = total_voi / @recorded_vois.size.to_f
@@ -46,6 +41,7 @@ module Phileas
         # reset messages array and messages_to_next_aggregation counter
         @recorded_vois = []
         @messages_to_next_aggregation = @aggregation_window_size_dist.next
+
         # return size and voi message attributes
         {
           size: @aggregated_message_size_dist.next,
