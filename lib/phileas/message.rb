@@ -5,7 +5,7 @@ module Phileas
 
   class Message
 
-    attr_reader :size, :content_type, :type, :originating_location
+    attr_reader :size, :content_type, :type, :originating_location, :starting_voi
 
     def initialize(size:, type:, content_type:, starting_voi:,
                    originating_time:, originating_location:, time_decay:,
@@ -38,7 +38,7 @@ module Phileas
       else
         @space_decay_function.remaining_value_at(@originating_location.distance(location))
       end
-
+      
       @starting_voi * spatial_decay *
         @time_decay_function.remaining_value_at(time-@originating_time)
     end

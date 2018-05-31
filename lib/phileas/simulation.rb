@@ -127,6 +127,12 @@ module Phileas
           schedule_next_raw_data_message_generation(data_source)
 
         when Event::ET_RAW_DATA_MESSAGE_ARRIVAL
+          msg, service = e.data
+          new_msg = service.incoming_message(msg, @current_time)
+          unless new_msg.nil?
+            dispatch_message(new_msg)
+          end
+
         when Event::ET_IO_MESSAGE_ARRIVAL
           msg, service = e.data
           new_msg = service.incoming_message(msg, @current_time)
@@ -142,8 +148,9 @@ module Phileas
           msg, user_group = e.data
           msg_voi = msg.remaining_voi_at(time: @current_time,
                                          location: user_group.location)
-          num_users = user_group.users_interested(content_type: msg.content_type, 
-                                                  time: @current_time)
+          #num_users = user_group.users_interested(content_type: msg.content_type, 
+          #                                        time: @current_time)
+          num_users = user_group.users_interested(content_type: msg.content_type)
           total_voi = msg_voi * num_users
 
           # NOTE: for now the output is a list of VoI values measured at the
@@ -209,14 +216,20 @@ module Phileas
       end
 
       def dispatch_crio_message(msg)
-        @user_group_repository.find_interested_user_groups(msg.content_type) do |ug|
-          loc1 = msg.originating_location
-          loc2 = serv.device_location
-          transmission_time = @latency_manager.calculate_trasmission_time_between(loc1, loc2)
-          unless transmission_time.nil?
-            new_event(Event::ET_CRIO_MESSAGE_ARRIVAL, [ msg, ug ], @current_time + transmission_time)
-          else
-            $stderr.puts "transmission is unfeasible"
+        @user_group_repository.each do |ug_id,ug|
+          ug.interests.each do |interest| 
+            if interest[:content_type] == msg.content_type
+              loc1 = msg.originating_location
+              # loc2 should be the location of the user so the transmission time
+              # is the difference between  
+              loc2 = ug.location
+              transmission_time = @latency_manager.calculate_trasmission_time_between(loc1, loc2)
+              unless transmission_time.nil?
+                new_event(Event::ET_CRIO_MESSAGE_ARRIVAL, [ msg, ug ], @current_time + transmission_time)
+              else
+                $stderr.puts "transmission is unfeasible"
+              end
+            end
           end
         end
       end

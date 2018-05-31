@@ -29,17 +29,23 @@ module Phileas
         return if rand > threshold
       end
 
-      @messages_to_next_aggregation -= 1
+      #do not use negative values
+      #unless @messages_to_next_aggregation == 0
+      #  @messages_to_next_aggregation -= 1
+      #end
       # check whether to trigger aggregation
       if @messages_to_next_aggregation == 0
-        # reset messages array and messages_to_next_aggregation counter
-        @recorded_vois = []
-        @messages_to_next_aggregation = @aggregation_window_size_dist.next
-
+        #skip if no records
+        if @recorded_vois == []
+          return nil
+        end
         # calculate average voi
         total_voi = @recorded_vois.inject(0.0) {|acc,el| acc += el }
         average_voi = total_voi / @recorded_vois.size.to_f
 
+        # reset messages array and messages_to_next_aggregation counter
+        @recorded_vois = []
+        @messages_to_next_aggregation = @aggregation_window_size_dist.next
         # return size and voi message attributes
         {
           size: @aggregated_message_size_dist.next,
@@ -48,7 +54,7 @@ module Phileas
       else
         @messages_to_next_aggregation -= 1
         @recorded_vois << value
-        nil
+        return nil
       end
     end
   end
@@ -90,19 +96,20 @@ module Phileas
     end
 
     def incoming_message(msg, time)
-      voi_left = msg.remaining_value_at(time: time, location: @device.location)
+      voi_left = msg.remaining_voi_at(time: time, location: @device.location)
       size_and_voi_attrs = @processing_policy.process_message_with_voi(voi_left)
       unless size_and_voi_attrs.nil?
         attrs = {
           type:                 @output_message_type,
           content_type:         @output_content_type,
           originating_time:     time,
-          originating_location: @location,
+          originating_location: @device.location,
           time_decay:           @time_decay,
           space_decay:          @space_decay,
         }
-        Message.new(attrs.merge!(size_and_voi_attrs))
+        return Message.new(attrs.merge!(size_and_voi_attrs))
       end
+      return nil
     end
   end
 

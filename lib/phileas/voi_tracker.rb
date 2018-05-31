@@ -30,7 +30,8 @@ module Phileas
     def remaining_value_at(coord)
       case @decay_type
       when :linear
-        [ 1.0 - (coord - @initial_value) / (2 * @halflife), 0.0 ].max
+        #[ 1.0 - (coord - @initial_value) / (2 * @halflife), 0.0 ].max
+        [ 1.0 - coord / (2 * @halflife), 0.0 ].max
       when :exponential
         @alpha ||= LN_2 / (@halflife - 1.0) # memoize to speed up following calculations
         x = @initial_value - coord + 1.0

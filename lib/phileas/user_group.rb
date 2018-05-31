@@ -4,6 +4,9 @@
 module Phileas
 
   class UserGroup
+
+    attr_reader :interests, :location
+
     def initialize(location:, user_dist:, interests:)
       @interests = interests
       @location  = location
@@ -15,6 +18,14 @@ module Phileas
       # change over time - so (at least) for now we can just ignore the time
       # parameter.
       @user_dist.sample.to_i
+    end
+
+    def users_interested(content_type)
+      @interests.each do |interest|
+        if interest[:content_type] == content_type[:content_type]
+          return interest[:share]
+        end
+      end
     end
   end
 
