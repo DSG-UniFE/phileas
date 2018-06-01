@@ -58,6 +58,11 @@ module Phileas
 
       # setup latency manager
       @latency_manager = LatencyManager.new
+
+      #simulation data file
+      time = Time.now.strftime('%Y%m%d%H%M%S')
+      @benchmark = File.open("simdata#{time}.csv", 'w')
+      @benchmark  << "CurrentTime,VoITotal,ContentType\n"
     end
 
     def new_event(type, data, time)
@@ -144,7 +149,8 @@ module Phileas
           # NOTE: for now the output is a list of VoI values measured at the
           # corresponding time - the idea is to facilitate post-processing via
           # CSV parsing
-          puts "#@current_time,#{total_voi}"
+          puts "#@current_time,#{total_voi},#{msg.content_type}"
+          @benchmark << "#@current_time,#{total_voi},#{msg.content_type}\n"
 
 
         when Event::ET_SERVICE_ACTIVATION
@@ -161,7 +167,8 @@ module Phileas
           break
         end
       end
-
+      
+      @benchmark.close
       @state = :not_running
       @event_queue = nil
     end
