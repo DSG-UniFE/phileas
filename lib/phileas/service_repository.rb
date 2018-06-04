@@ -25,5 +25,9 @@ module Phileas
         yield s
       end
     end
+
+    def length
+      @services.length
+    end
   end
 end

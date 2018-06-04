@@ -59,10 +59,13 @@ module Phileas
       # setup latency manager
       @latency_manager = LatencyManager.new
 
-      #simulation data file
+      #voi benchmark  file
       time = Time.now.strftime('%Y%m%d%H%M%S')
-      @benchmark = File.open("simdata#{time}.csv", 'w')
-      @benchmark  << "CurrentTime,VoITotal,ContentType\n"
+      @voi_benchmark = File.open("sim_voi_data#{time}.csv", 'w')
+      @voi_benchmark  << "CurrentTime,VoITotal,ContentType\n"
+      #services benchmakr file (aggregated/dropped/ messages) resources' status
+      @services_benchmark = File.open("sim_services_data#{time}.csv", 'w')
+      @services_benchmark << "MsgType,MsgContentType,ResourcesRequirements,AvailableResources,ActiveServices\n"
     end
 
     def new_event(type, data, time)
@@ -133,6 +136,9 @@ module Phileas
           # perform message dispatching accordingly
           unless new_msg.nil?
             dispatch_message(new_msg)
+          else
+            #log if message has been dropped
+            @services_benchmark << "#{msg.type},#{msg.content_type},#{service.resource_requirements},#{service.device.available_resources},#{@active_service_repository.length}\n"
           end
 
 
@@ -150,7 +156,7 @@ module Phileas
           # corresponding time - the idea is to facilitate post-processing via
           # CSV parsing
           puts "#@current_time,#{total_voi},#{msg.content_type}"
-          @benchmark << "#@current_time,#{total_voi},#{msg.content_type}\n"
+          @voi_benchmark << "#@current_time,#{total_voi},#{msg.content_type}\n"
 
 
         when Event::ET_SERVICE_ACTIVATION
@@ -168,7 +174,8 @@ module Phileas
         end
       end
       
-      @benchmark.close
+      @voi_benchmark.close
+      @services_benchmark.close
       @state = :not_running
       @event_queue = nil
     end
