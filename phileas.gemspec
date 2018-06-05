@@ -7,8 +7,8 @@ require "phileas/version"
 Gem::Specification.new do |spec|
   spec.name          = "phileas"
   spec.version       = Phileas::VERSION
-  spec.authors       = ["Mauro Tortonesi"]
-  spec.email         = ["mauro.tortonesi@unife.it"]
+  spec.authors       = ["Mauro Tortonesi", "Filippo Poltronieri"]
+  spec.email         = ["mauro.tortonesi@unife.it", "filippo.poltronieri@unife.it"]
 
   spec.summary       = %q{A classy and adventurous Fog Computing simulator}
   spec.description   = %q{A classy and adventurous Fog Computing simulator}
