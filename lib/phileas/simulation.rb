@@ -62,10 +62,10 @@ module Phileas
       #voi benchmark  file
       time = Time.now.strftime('%Y%m%d%H%M%S')
       @voi_benchmark = File.open("sim_voi_data#{time}.csv", 'w')
-      @voi_benchmark  << "CurrentTime,VoITotal,ContentType\n"
+      @voi_benchmark  << "CurrentTime,VoITotal,ContentType,ActiveServices\n"
       #services benchmakr file (aggregated/dropped/ messages) resources' status
       @services_benchmark = File.open("sim_services_data#{time}.csv", 'w')
-      @services_benchmark << "MsgType,MsgContentType,ResourcesRequirements,AvailableResources,ActiveServices\n"
+      @services_benchmark << "MsgType,MsgContentType,Dropped,ResourcesRequirements,AvailableResources,ActiveServices\n"
     end
 
     def new_event(type, data, time)
@@ -92,7 +92,7 @@ module Phileas
         time = service_activation_conf.dig(:at, :time)
         device_id = service_activation_conf.dig(:at, :device_id)
         service_conf = service_type.dup
-        service_conf.merge!(device: @device_repository[device_id])
+        service_conf.merge!(device: @device_repository[device_id], activation_time: time)
         new_event(Event::ET_SERVICE_ACTIVATION, [ service_conf ], time&.to_time&.to_f)
       end
 
@@ -136,9 +136,10 @@ module Phileas
           # perform message dispatching accordingly
           unless new_msg.nil?
             dispatch_message(new_msg)
+            @services_benchmark << "#{msg.type},#{msg.content_type},false,#{service.resource_requirements},#{service.device.available_resources},#{@active_service_repository.find_active_services(@current_time).length}\n"
           else
             #log if message has been dropped
-            @services_benchmark << "#{msg.type},#{msg.content_type},#{service.resource_requirements},#{service.device.available_resources},#{@active_service_repository.length}\n"
+            @services_benchmark << "#{msg.type},#{msg.content_type},true,#{service.resource_requirements},#{service.device.available_resources},#{@active_service_repository.find_active_services(@current_time).length}\n"
           end
 
 
@@ -155,8 +156,8 @@ module Phileas
           # NOTE: for now the output is a list of VoI values measured at the
           # corresponding time - the idea is to facilitate post-processing via
           # CSV parsing
-          puts "#@current_time,#{total_voi},#{msg.content_type}"
-          @voi_benchmark << "#@current_time,#{total_voi},#{msg.content_type}\n"
+          puts "#@current_time,#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length}"
+          @voi_benchmark << "#@current_time,#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length}\n"
 
 
         when Event::ET_SERVICE_ACTIVATION
@@ -183,8 +184,10 @@ module Phileas
     # TODO: consider refactoring the following methods and moving them out of the Simulator class
     private
       def schedule_next_raw_data_message_generation(data_source)
-        time_to_next_generation, raw_msg = data_source.generate(@current_time)
-        new_event(Event::ET_RAW_DATA_MESSAGE_GENERATION, [ raw_msg, data_source ], @current_time + time_to_next_generation)
+        if @current_time <= (@configuration.start_time + @configuration.duration)
+          time_to_next_generation, raw_msg = data_source.generate(@current_time)
+          new_event(Event::ET_RAW_DATA_MESSAGE_GENERATION, [ raw_msg, data_source ], @current_time + time_to_next_generation)          
+        end
       end
 
       # TODO: consider joining dispatch and management of raw data and IO messages

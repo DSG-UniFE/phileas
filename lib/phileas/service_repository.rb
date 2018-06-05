@@ -26,6 +26,13 @@ module Phileas
       end
     end
 
+    def find_active_services(cur_time)
+      active_services = @services.select do |s|
+        s.activation_time&.to_time&.to_f <= cur_time
+      end
+      active_services
+    end
+
     def length
       @services.length
     end

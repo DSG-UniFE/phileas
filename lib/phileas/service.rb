@@ -4,7 +4,8 @@
 module Phileas
 
   class AggregationProcessingPolicy
-    def initialize(aggregation_window_size_dist:, aggregated_message_size_dist:, voi_multiplier:, resource_requirements:)
+    def initialize(aggregation_window_size_dist:, aggregated_message_size_dist:, voi_multiplier:,
+       resource_requirements:, device:)
       @aggregation_window_size_dist = ERV::RandomVariable.new(aggregation_window_size_dist)
       @aggregated_message_size_dist = ERV::RandomVariable.new(aggregated_message_size_dist)
       # ASSUMPTION: for the moment we adopt the simple policy of generating the
@@ -14,7 +15,9 @@ module Phileas
       @recorded_vois = []
       @messages_to_next_aggregation = @aggregation_window_size_dist.next
       @resources_required = resource_requirements
+      #is this a bug?
       @resources_assigned = resource_requirements
+      @device = device
     end
 
     def assign_resources(quantity)
@@ -24,7 +27,7 @@ module Phileas
     def process_message_with_voi(value)
       # reject messages if resources are not sufficient
       # for the moment we implement a linear message drop policy
-      threshold = @resources_assigned / @resources_required
+      threshold = @device.available_resources / @resources_required
       if (threshold < 1.0)
         return if rand > threshold
       end
@@ -63,11 +66,11 @@ module Phileas
     # called by device
     def_delegator :@processing_policy, :assign_resources
 
-    attr_reader :device, :resource_requirements, :input_message_type, :input_content_type
+    attr_reader :device, :resource_requirements, :input_message_type, :input_content_type, :activation_time
 
     def initialize(device:, input_message_type:, input_content_type:, output_message_type:,
                    output_content_type:, resource_requirements:, time_decay:,
-                   space_decay:, processing_policy:)
+                   space_decay:, processing_policy:, activation_time:)
       @device                = device
       @input_content_type    = input_content_type
       @input_message_type    = input_message_type
@@ -76,6 +79,7 @@ module Phileas
       @resource_requirements = resource_requirements
       @time_decay            = time_decay
       @space_decay           = space_decay
+      @activation_time       = activation_time
 
       # prepare processing policy configuration
       processing_policy_configuration = processing_policy.dup
@@ -85,7 +89,7 @@ module Phileas
       klass_name = processing_policy_type.split('_').map(&:capitalize).join + 'ProcessingPolicy'
 
       # add resource requirements
-      processing_policy_configuration.merge!(resource_requirements: resource_requirements)
+      processing_policy_configuration.merge!(resource_requirements: resource_requirements, device: @device)
 
       # create processing_policy object
       @processing_policy = Phileas.const_get(klass_name).new(processing_policy_configuration)
