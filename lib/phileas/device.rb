@@ -60,8 +60,11 @@ module Phileas
   end
 
   class CloudPlatform
+    attr_reader :location
+
     def initialize
       @services = []
+      @location = :cloud
     end
 
     # TODO: CHECK IF WE NEED TO KEEP TRACK OF CURRENT TIME HERE
