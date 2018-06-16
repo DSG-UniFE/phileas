@@ -62,7 +62,7 @@ module Phileas
       #voi benchmark  file
       time = Time.now.strftime('%Y%m%d%H%M%S')
       @voi_benchmark = File.open("sim_voi_data#{time}.csv", 'w')
-      @voi_benchmark  << "CurrentTime,OriginatingTime,VoITotal,ContentType,ActiveServices\n"
+      @voi_benchmark  << "CurrentTime,OriginatingTime,Users,VoITotal,ContentType,ActiveServices\n"
       #services benchmakr file (aggregated/dropped/ messages) resources' status
       @services_benchmark = File.open("sim_services_data#{time}.csv", 'w')
       @services_benchmark << "CurrentTime,MsgType,MsgContentType,Dropped,ResourcesRequirements,AvailableResources,ActiveServices,EdgeResourcesUsed\n"
@@ -156,8 +156,8 @@ module Phileas
           # NOTE: for now the output is a list of VoI values measured at the
           # corresponding time - the idea is to facilitate post-processing via
           # CSV parsing
-          puts "#@current_time,#{msg.originating_time},#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length}"
-          @voi_benchmark << "#@current_time,#{msg.originating_time},#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length}\n"
+          puts "#@current_time,#{msg.originating_time},#{num_users},#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length}"
+          @voi_benchmark << "#@current_time,#{msg.originating_time},#{num_users},#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length}\n"
 
 
         when Event::ET_SERVICE_ACTIVATION
