@@ -45,7 +45,7 @@ module Phileas
     extend Forwardable
     def_delegators :@resource_assignment_policy, :add_service, :remove_service, :available_resources
 
-    attr_reader :location
+    attr_reader :location, :resources
 
     def initialize(resources:, location:)
       @resources = resources

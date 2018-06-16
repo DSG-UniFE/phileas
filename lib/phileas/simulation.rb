@@ -62,10 +62,10 @@ module Phileas
       #voi benchmark  file
       time = Time.now.strftime('%Y%m%d%H%M%S')
       @voi_benchmark = File.open("sim_voi_data#{time}.csv", 'w')
-      @voi_benchmark  << "CurrentTime,VoITotal,ContentType,ActiveServices\n"
+      @voi_benchmark  << "CurrentTime,OriginatingTime,VoITotal,ContentType,ActiveServices\n"
       #services benchmakr file (aggregated/dropped/ messages) resources' status
       @services_benchmark = File.open("sim_services_data#{time}.csv", 'w')
-      @services_benchmark << "MsgType,MsgContentType,Dropped,ResourcesRequirements,AvailableResources,ActiveServices\n"
+      @services_benchmark << "CurrentTime,MsgType,MsgContentType,Dropped,ResourcesRequirements,AvailableResources,ActiveServices,EdgeResourcesUsed\n"
     end
 
     def new_event(type, data, time)
@@ -136,10 +136,10 @@ module Phileas
           # perform message dispatching accordingly
           unless new_msg.nil?
             dispatch_message(new_msg)
-            @services_benchmark << "#{msg.type},#{msg.content_type},false,#{service.resource_requirements},#{service.device.available_resources},#{@active_service_repository.find_active_services(@current_time).length}\n"
+            @services_benchmark << "#{@current_time}#{msg.type},#{msg.content_type},false,#{service.resource_requirements},#{service.device.available_resources},#{@active_service_repository.find_active_services(@current_time).length},#{resources_in_use_at_the_edge(@device_repository)}\n"
           else
             #log if message has been dropped
-            @services_benchmark << "#{msg.type},#{msg.content_type},true,#{service.resource_requirements},#{service.device.available_resources},#{@active_service_repository.find_active_services(@current_time).length}\n"
+            @services_benchmark << "#{@current_time},#{msg.type},#{msg.content_type},true,#{service.resource_requirements},#{service.device.available_resources},#{@active_service_repository.find_active_services(@current_time).length},#{resources_in_use_at_the_edge(@device_repository)}\n"
           end
 
 
@@ -156,8 +156,8 @@ module Phileas
           # NOTE: for now the output is a list of VoI values measured at the
           # corresponding time - the idea is to facilitate post-processing via
           # CSV parsing
-          puts "#@current_time,#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length}"
-          @voi_benchmark << "#@current_time,#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length}\n"
+          puts "#@current_time,#{msg.originating_time},#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length}"
+          @voi_benchmark << "#@current_time,#{msg.originating_time},#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length}\n"
 
 
         when Event::ET_SERVICE_ACTIVATION
@@ -250,6 +250,17 @@ module Phileas
         else
           raise "Inconsistent message type found (#{msg.type})!"
         end
+      end
+
+      #monitor the available resource at the edge during the simulation
+      def resources_in_use_at_the_edge(device_repository)
+        resources_in_use = 0
+        device_repository.each do |dev|
+          unless dev[1].type == :cloud
+              resources_in_use += (dev[1].resources - dev[1].available_resources)
+          end
+        end
+        resources_in_use / device_repository.length.to_f
       end
 
   end

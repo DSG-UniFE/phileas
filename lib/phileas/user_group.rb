@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-
+require 'erv'
 
 module Phileas
 
@@ -10,7 +10,7 @@ module Phileas
     def initialize(location:, user_dist:, interests:)
       @interests = interests
       @location  = location
-      @user_dist = user_dist
+      @user_dist = ERV::RandomVariable.new(user_dist)
     end
 
     def users_at(time)
@@ -23,7 +23,7 @@ module Phileas
     def users_interested(content_type)
       @interests.each do |interest|
         if interest[:content_type] == content_type[:content_type]
-          return interest[:share]
+          return interest[:share] * users_at(nil) 
         end
       end
     end
