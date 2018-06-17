@@ -21,11 +21,13 @@ module Phileas
     end
 
     def users_interested(content_type)
+      users = 0.to_f
       @interests.each do |interest|
         if interest[:content_type] == content_type[:content_type]
-          return interest[:share] * users_at(nil) 
+          users +=  interest[:share] * users_at(nil) 
         end
       end
+      users
     end
   end
 
