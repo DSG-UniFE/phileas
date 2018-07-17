@@ -62,7 +62,7 @@ module Phileas
       #voi benchmark  file
       time = Time.now.strftime('%Y%m%d%H%M%S')
       @voi_benchmark = File.open("sim_voi_data#{time}.csv", 'w')
-      @voi_benchmark  << "CurrentTime,OriginatingTime,Users,VoITotal,ContentType,ActiveServices\n"
+      @voi_benchmark  << "CurrentTime,InputVoI,OriginatingTime,Users,OutputVoI,ContentType,ActiveServices\n"
       #services benchmakr file (aggregated/dropped/ messages) resources' status
       @services_benchmark = File.open("sim_services_data#{time}.csv", 'w')
       @services_benchmark << "CurrentTime,MsgType,MsgContentType,Dropped,ResourcesRequirements,AvailableResources,ActiveServices,EdgeResourcesUsed\n"
@@ -136,7 +136,7 @@ module Phileas
           # perform message dispatching accordingly
           unless new_msg.nil?
             dispatch_message(new_msg)
-            @services_benchmark << "#{@current_time}#{msg.type},#{msg.content_type},false,#{service.resource_requirements},#{service.device.available_resources},#{@active_service_repository.find_active_services(@current_time).length},#{resources_in_use_at_the_edge(@device_repository)}\n"
+            @services_benchmark << "#{@current_time},#{msg.type},#{msg.content_type},false,#{service.resource_requirements},#{service.device.available_resources},#{@active_service_repository.find_active_services(@current_time).length},#{resources_in_use_at_the_edge(@device_repository)}\n"
           else
             #log if message has been dropped
             @services_benchmark << "#{@current_time},#{msg.type},#{msg.content_type},true,#{service.resource_requirements},#{service.device.available_resources},#{@active_service_repository.find_active_services(@current_time).length},#{resources_in_use_at_the_edge(@device_repository)}\n"
@@ -156,8 +156,8 @@ module Phileas
           # NOTE: for now the output is a list of VoI values measured at the
           # corresponding time - the idea is to facilitate post-processing via
           # CSV parsing
-          puts "#@current_time,#{msg.originating_time},#{num_users},#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length}"
-          @voi_benchmark << "#@current_time,#{msg.originating_time},#{num_users},#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length}\n"
+          puts "#@current_time,#{msg.originating_time},#{msg.starting_voi},#{num_users},#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length}"
+          @voi_benchmark << "#@current_time,#{msg.starting_voi},#{msg.originating_time},#{num_users},#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length}\n"
 
 
         when Event::ET_SERVICE_ACTIVATION
