@@ -27,7 +27,9 @@ module Phileas
     def process_message_with_voi(value)
       # reject messages if resources are not sufficient
       # for the moment we implement a linear message drop policy
-      threshold = @device.available_resources / @resources_required
+      # if the device has no available resources,the message will be dropped 
+      # resources asgined to this service
+      threshold = @resources_assigned / @resources_required
       if (threshold < 1.0)
         return if rand > threshold
       end
