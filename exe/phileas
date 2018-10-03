@@ -7,6 +7,10 @@ rescue LoadError
   require 'phileas'
 end
 
+def do_abort(message) 
+  $stderr.puts message
+end
+
 if File.expand_path(__FILE__) == File.expand_path($0)
   # make sure simulator config file exists
   unless ARGV.size >= 1 
