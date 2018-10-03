@@ -16,7 +16,7 @@ module Phileas
   class Simulator
     def initialize(configuration:)
       @state = :not_running
-      @progress_bar = ProgressBar.new
+      @progress_bar = ProgressBar.new(100, :bar, :percentage, :elapsed, :eta)
       @event_queue = nil
       @active_service_repository = []
       @configuration = configuration
@@ -187,9 +187,7 @@ module Phileas
     # TODO: consider refactoring the following methods and moving them out of the Simulator class
     private
       def schedule_next_raw_data_message_generation(data_source)
-        progress = ((@current_time - @configuration.start_time) / (@configuration.duration))
-        puts "progress #{progress}"
-        #@progress_bar.increment! progress
+        update_progress_bar
         if @current_time <= (@configuration.start_time + @configuration.duration)
           time_to_next_generation, raw_msg = data_source.generate(@current_time)
           new_event(Event::ET_RAW_DATA_MESSAGE_GENERATION, [ raw_msg, data_source ], @current_time + time_to_next_generation)     
@@ -267,6 +265,11 @@ module Phileas
           end
         end
         resources_in_use / device_repository.length.to_f
+      end
+
+      def update_progress_bar
+        @progress_bar.count = ((@current_time - @configuration.start_time) / (@configuration.duration)) * 100
+        @progress_bar.increment! 0
       end
 
   end
