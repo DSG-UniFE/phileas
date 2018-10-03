@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require 'progress_bar'
 
 require_relative './support/sorted_array'
 require_relative './data_source'
@@ -15,6 +16,7 @@ module Phileas
   class Simulator
     def initialize(configuration:)
       @state = :not_running
+      @progress_bar = ProgressBar.new
       @event_queue = nil
       @active_service_repository = []
       @configuration = configuration
@@ -156,7 +158,7 @@ module Phileas
           # NOTE: for now the output is a list of VoI values measured at the
           # corresponding time - the idea is to facilitate post-processing via
           # CSV parsing
-          puts "#@current_time,#{msg.originating_time},#{msg.starting_voi},#{num_users},#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length}"
+          #puts "#@current_time,#{msg.originating_time},#{msg.starting_voi},#{num_users},#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length}"
           @voi_benchmark << "#@current_time,#{msg.starting_voi},#{msg.originating_time},#{num_users},#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length}\n"
 
 
@@ -185,9 +187,12 @@ module Phileas
     # TODO: consider refactoring the following methods and moving them out of the Simulator class
     private
       def schedule_next_raw_data_message_generation(data_source)
+        progress = ((@current_time - @configuration.start_time) / (@configuration.duration))
+        puts "progress #{progress}"
+        #@progress_bar.increment! progress
         if @current_time <= (@configuration.start_time + @configuration.duration)
           time_to_next_generation, raw_msg = data_source.generate(@current_time)
-          new_event(Event::ET_RAW_DATA_MESSAGE_GENERATION, [ raw_msg, data_source ], @current_time + time_to_next_generation)          
+          new_event(Event::ET_RAW_DATA_MESSAGE_GENERATION, [ raw_msg, data_source ], @current_time + time_to_next_generation)     
         end
       end
 
@@ -202,7 +207,7 @@ module Phileas
           unless transmission_time.nil?
             new_event(Event::ET_RAW_DATA_MESSAGE_ARRIVAL, [ msg, serv ], @current_time + transmission_time)
           else
-            $stderr.puts "transmission is unfeasible"
+            #$stderr.puts "transmission is unfeasible"
           end
         end
       end
@@ -216,7 +221,7 @@ module Phileas
           unless transmission_time.nil?
             new_event(Event::ET_IO_MESSAGE_ARRIVAL, [ msg, serv ], @current_time + transmission_time)
           else
-            $stderr.puts "transmission is unfeasible"
+            #$stderr.puts "transmission is unfeasible"
           end
         end
       end
@@ -233,7 +238,7 @@ module Phileas
               unless transmission_time.nil?
                 new_event(Event::ET_CRIO_MESSAGE_ARRIVAL, [ msg, ug ], @current_time + transmission_time)
               else
-                $stderr.puts "transmission is unfeasible"
+                #$stderr.puts "transmission is unfeasible"
               end
             end
           end
