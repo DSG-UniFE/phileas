@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 args = commandArgs(trailingOnly=TRUE)
 if (length(args)==0) {
-  stop("Please insert as input a CSV file.n", call.=FALSE)
+  stop("Error: Usage Rscript generate_plots.r <csvfile>", call.=FALSE)
 }
 # loading ggplot2 library
 library(ggplot2)
