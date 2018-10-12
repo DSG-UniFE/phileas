@@ -28,7 +28,7 @@ module Phileas
       # reject messages if resources are not sufficient
       # for the moment we implement a linear message drop policy
       # if the device has no available resources,the message will be dropped 
-      # resources asgined to this service
+      # resources assigined to this service
       threshold = @resources_assigned / @resources_required
       if (threshold < 1.0)
         return if rand > threshold
