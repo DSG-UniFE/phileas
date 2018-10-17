@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 args = commandArgs(trailingOnly=TRUE)
 if (length(args)==0) {
-  stop("Error: Usage Rscript generate_plots.r <csvfile>", call.=FALSE)
+  stop("Error: Usage Rscript generate_plots.r <csvfile> <csvfile2>", call.=FALSE)
 }
 # loading ggplot2 library
 library(ggplot2)
@@ -20,10 +20,23 @@ height <- 7
 
 #ggsave(voict_fn,  height = 5 , width = 5 * aspect_ratio)
 
-vp + geom_smooth() + xlab("Time") +
+vp + geom_smooth() + xlab("Time") #+ geom_smooth(data = voi_data, aes(x=nr, y=OutputVoI, color=ActiveServices)) +
         ylab("VoI") + theme_bw() + theme(text = element_text(size=15)) 
-voict_fn_all = paste("voi_ct_all_",gsub("[a-z _ .]", "", filename), ".png", sep="")
+voict_fn_all <- paste("voi_ct_all_",gsub("[a-z _ .]", "", filename), ".png", sep="")
 
 # save plot with all services on the same graph
 ggsave(voict_fn_all, height = 5 , width = 5 * aspect_ratio)
 
+processed_data_plot <- ggplot(voi_data, aes(x=ContentType, group=ContentType, fill=ContentType))
+processed_data_plot + geom_histogram(stat="count") + theme(legend.position="none") + ylab("Messages") + xlab("ContentType") + theme_bw()
+processed_data_file <- paste("voi_ct_processed_",gsub("[a-z _ .]", "", filename), ".png", sep="")
+
+ggsave(processed_data_file, height = 5 , width = 5 * aspect_ratio)
+
+services_data <- read.csv(args[2])
+services_data_plot <- ggplot(subset(services_data, Dropped %in% c("true")), aes(x=MsgContentType, group=MsgContentType, fill=MsgContentType))
+services_data_plot + geom_histogram(stat="count") + theme_bw() + theme(legend.position="none") + ylab("Messages") + xlab("ContentType")
+
+services_dropped_fn_all <- paste("services_ct_all_",gsub("[a-z _ .]", "", filename), ".png", sep="")
+
+ggsave(services_dropped_fn_all, height = 5 , width = 5 * aspect_ratio)
