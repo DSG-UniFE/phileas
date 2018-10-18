@@ -149,12 +149,12 @@ module Phileas
           # calculate voi at user group
           msg, user_group = e.data
           msg_voi = msg.remaining_voi_at(time: @current_time,
-                                         location: user_group.location)
+                                         location: user_group.location, debug: false)
           #num_users = user_group.users_interested(content_type: msg.content_type,
           #                                        time: @current_time)
           num_users = user_group.users_interested(content_type: msg.content_type)
           total_voi = msg_voi * num_users
-
+          #puts "CRIO message starting_voi: #{msg.starting_voi} remaing_voi: #{msg_voi}"
           # NOTE: for now the output is a list of VoI values measured at the
           # corresponding time - the idea is to facilitate post-processing via
           # CSV parsing
@@ -181,7 +181,7 @@ module Phileas
       @services_benchmark.close
       @state = :not_running
       @event_queue = nil
-      #`Rscript --vanilla bin/generate_plots.r #{@voi_benchmark.path}`
+      `Rscript --vanilla bin/generate_plots.r #{@voi_benchmark.path} #{@services_benchmark.path}`
     end
 
     # TODO: consider refactoring the following methods and moving them out of the Simulator class
@@ -264,8 +264,12 @@ module Phileas
               resources_in_use += (dev[1].resources - dev[1].available_resources)
           end
         end
-        resources_in_use / device_repository.length.to_f
+        resources_in_use / (device_repository.length.to_f * 100.0)
       end
+      #def resources_in_use_at_the_edge(device_repository)
+      #  0.0
+      #end
+
 
       def update_progress_bar
         @progress_bar.count = ((@current_time - @configuration.start_time) / (@configuration.duration)) * 100

@@ -27,7 +27,7 @@ module Phileas
       end
     end
 
-    def remaining_voi_at(time:, location:)
+    def remaining_voi_at(time:, location:, debug: false)
       if @originating_time > time
         raise ArgumentError, "Requested VoI evaluation time (#{time}) preceedes message originating time (#{@originating_time})!"
       end
@@ -38,7 +38,8 @@ module Phileas
       else
         @space_decay_function.remaining_value_at(@originating_location.distance(location))
       end
-
+      puts "distance: #{@originating_location.distance(location)} spatial decay: #{spatial_decay} delta_time: #{time-@originating_time} time_decay: #{@time_decay_function.remaining_value_at(time-@originating_time)}" unless debug == false
+      #puts "spatial_decay: #{spatial_decay} time_decay: #{@time_decay_function.remaining_value_at(time-@originating_time)}"
       @starting_voi * spatial_decay *
         @time_decay_function.remaining_value_at(time-@originating_time)
     end
