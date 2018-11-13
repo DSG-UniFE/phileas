@@ -37,7 +37,9 @@ module Phileas
 
     private
       def reallocate_resources
-        @services.each {|x| x.assign_resources(x.resource_requirements / @total_resources_required) }
+        # scales resources based on the device' resource pool
+        # instead of using a 0..1 scale
+        @services.each {|x| x.assign_resources((x.resource_requirements / @total_resources_required) * @resource_pool)  }
       end
   end
 
