@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 args = commandArgs(trailingOnly=TRUE)
 if (length(args)==0) {
-  stop("Error: Usage Rscript generate_plots.r <csvfile> <csvfile2>", call.=FALSE)
+  stop("Error: Usage Rscript generate_plots.r <csvfile> <csvfile2> <csvfile3>", call.=FALSE)
 }
 # loading ggplot2 library
 library(ggplot2)
@@ -40,3 +40,18 @@ services_data_plot + geom_histogram(stat="count") + theme_bw() + theme(legend.po
 services_dropped_fn_all <- paste("services_ct_all_",gsub("[a-z _ .]", "", filename), ".png", sep="")
 
 ggsave(services_dropped_fn_all, height = 5 , width = 5 * aspect_ratio)
+
+allocation_data <- read.csv(args[3])
+allocation_data <- allocation_data[!apply(is.na(allocation_data) | allocation_data == "", 1, all),]
+allocation_plot <- ggplot(allocation_data, aes(x=CurrentTime, y=CoreNumber, color=Service))
+allocation_plot + geom_line() + facet_wrap(~Device, ncol=2)
+
+alllocation_plot_fn <- paste("allocation_plot_file",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
+ggsave(alllocation_plot_fn, height = 5 , width = 5 * aspect_ratio)
+
+utilization_data <- read.csv(args[4])
+utilization_data_fn <- paste("device_utilization_plot",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
+utilization_plot <- ggplot(utilization_data, aes(x=CurrentTime, y=Utilization, color=Device))
+utilization_plot + geom_line() + facet_wrap(~Device, ncol=2)
+ggsave(utilization_data_fn, height = 5 , width = 5 * aspect_ratio)
+
