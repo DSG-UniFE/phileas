@@ -61,6 +61,11 @@ module Phileas
       # setup latency manager
       @latency_manager = LatencyManager.new
 
+      # Prototyping speed_up simulation
+      # Need to adjust the probability function
+      # we need to set the time for reallocation
+      @serv_speedup_rv = ERV::RandomVariable.new(distribution: :gaussian, args: { mean: 0.02, sd: 0.001 })
+      #@scale_speedup_rv = ERV::RandomVariable.new(distribution: :discrete_uniform, args: { min: 0.0, max: 4.0 })
       #voi benchmark  file
       time = Time.now.strftime('%Y%m%d%H%M%S')
       @voi_benchmark = File.open("sim_voi_data#{time}.csv", 'w')
@@ -68,6 +73,10 @@ module Phileas
       #services benchmakr file (aggregated/dropped/ messages) resources' status
       @services_benchmark = File.open("sim_services_data#{time}.csv", 'w')
       @services_benchmark << "CurrentTime,MsgType,MsgContentType,Dropped,ResourcesRequirements,AvailableResources,ActiveServices,EdgeResourcesUsed\n"
+      @resources_allocation = File.open("resources_allocation_data#{time}.csv", 'w')
+      @resources_allocation << "CurrentTime,Service,Device,CoreNumber,Scale,DeviceResources\n"
+      @device_utilization = File.open("device_utilization#{time}.csv", 'w')
+      @device_utilization << "CurrentTime,Device,Utilization,DeviceResources\n"
     end
 
     def new_event(type, data, time)
@@ -103,6 +112,11 @@ module Phileas
         schedule_next_raw_data_message_generation(ds)
       end
 
+      # schedule intial generation of speed_up events
+      #puts "Active services at this time #{@active_service_repository.find_active_services(@current_time)}"
+      #@active_service_repository.find_active_services(@current_time).each do |as|
+      #  schedule_speed_up_event_generation
+      #end
       current_event = 0
 
       # launch simulation
@@ -165,10 +179,56 @@ module Phileas
         when Event::ET_SERVICE_ACTIVATION
           serv = ServiceFactory.create(e.data)
           @active_service_repository.add(serv)
+          schedule_speed_up_event_generation
 
 
         when Event::ET_SERVICE_SHUTDOWN
           raise "Unimplemented yet!"
+
+
+        when Event::ET_SERVICE_SPEEDUP
+          puts "ET_SERVICE_SPEEDUP event generated"
+          # for each ET_SERVICE_SPEEDUP event select a service randomly
+          selected_service = rand(@active_service_repository.find_active_services(@current_time).length)
+          service = @active_service_repository.find_active_services(@current_time)[selected_service]
+          puts "About to reallocate the resources for service #{service}"
+          dev_cores = service.device.resources
+          avg_cores = (dev_cores + service.device.available_resources) / 2.0
+          puts "Available cores on device: #{service.device.available_resources} / #{dev_cores}"
+          puts "Service is using #{service.resources_assigned} cores"
+          log_base = service.speed_up[:base]
+          log_exp = service.speed_up[:exp]
+          # simulate step by step speed_up or scale_down
+          # otherwise, we can use the gaussian random variable e.data
+          # calculate the possible speed_up based on the device's capabilities
+          # before was dev_cores, here we are trying to use the average between available and total instead
+          speed_up = rand(avg_cores) ** Math::log(log_exp, log_base)
+          # need to reallocate the resource requirements only for that service
+          # here we simulate an increased or a decreas interest in the service
+          scale = 0
+          if rand > 0.5 
+            # simulate a peak of interest 
+            scale = speed_up.round
+          else
+            scale = -speed_up.round
+          end
+          # Simulate an increase or a decrease of required resources
+          puts "Scale: #{scale} for #{service.output_content_type}"
+          service.resource_requirements += scale
+          service.resource_requirements = 0.0 if service.resource_requirements < 0.0
+          service.required_scale = scale
+          # reallocate reources here
+          service.device.resource_assignment_policy.reallocate_resources_with_speedup
+          # collect the data regarding device_utilization
+          @device_repository.each do |dev|
+            unless dev[1].type == :cloud
+              @device_utilization << "#{@current_time},#{dev[1]},#{(dev[1].resources - dev[1].available_resources).round},#{dev[1].resources}\n"
+            end
+          end
+          @active_service_repository.find_active_services(@current_time).each do |s|
+            @resources_allocation << "#{@current_time},#{s.output_content_type},#{s.device},#{s.resources_assigned},#{s.required_scale},#{s.device.resources}\n "
+          end
+          schedule_speed_up_event_generation
 
 
         when Event::ET_END_OF_SIMULATION
@@ -176,12 +236,15 @@ module Phileas
           break
         end
       end
-      
+  
       @voi_benchmark.close
       @services_benchmark.close
+      @resources_allocation.close
+      @device_utilization.close
       @state = :not_running
       @event_queue = nil
-      `Rscript --vanilla bin/generate_plots.r #{@voi_benchmark.path} #{@services_benchmark.path}`
+      # sleep before drawing the graphs
+      `sleep 2; Rscript --vanilla bin/generate_plots.r #{@voi_benchmark.path} #{@services_benchmark.path} #{@resources_allocation.path} #{@device_utilization.path}`
     end
 
     # TODO: consider refactoring the following methods and moving them out of the Simulator class
@@ -224,6 +287,20 @@ module Phileas
         end
       end
 
+      def schedule_speed_up_event_generation()
+        if @current_time <= (@configuration.start_time + @configuration.duration)
+          scale = @serv_speedup_rv.next
+          # time_to_next_generation = scale * 100000
+          # schedule a reallocation event each 1800 seconds
+          time_to_next_generation = 1800.to_f
+          puts "Current time: #{@current_time} \t Time to next generation  #{time_to_next_generation}"
+          new_event(Event::ET_SERVICE_SPEEDUP, [scale], @current_time + time_to_next_generation)     
+        end
+        #@active_service_repository.each do |serv|
+        #  puts "Simulating an incresead interest for service #{serv}"
+        #end
+      end
+
       def dispatch_crio_message(msg)
         @user_group_repository.each do |ug_id,ug|
           ug.interests.each do |interest|
@@ -256,7 +333,7 @@ module Phileas
         end
       end
 
-      #monitor the available resource at the edge during the simulation
+      # monitor the available resource at the edge during the simulation
       def resources_in_use_at_the_edge(device_repository)
         resources_in_use = 0
         device_repository.each do |dev|

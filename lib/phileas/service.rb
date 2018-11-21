@@ -68,11 +68,15 @@ module Phileas
     # called by device
     def_delegator :@processing_policy, :assign_resources
 
-    attr_reader :device, :resource_requirements, :input_message_type, :input_content_type, :activation_time
+    # Use resource_requirement to scale up or down the allocated cores on the device
+    attr_accessor :resource_requirements, :required_scale, :resources_assigned
+
+    attr_reader :device, :input_message_type, :input_content_type,
+                         :activation_time, :speed_up, :output_content_type
 
     def initialize(device:, input_message_type:, input_content_type:, output_message_type:,
                    output_content_type:, resource_requirements:, time_decay:,
-                   space_decay:, processing_policy:, activation_time:)
+                   space_decay:, processing_policy:, activation_time:, speed_up:)
       @device                = device
       @input_content_type    = input_content_type
       @input_message_type    = input_message_type
@@ -82,6 +86,9 @@ module Phileas
       @time_decay            = time_decay
       @space_decay           = space_decay
       @activation_time       = activation_time
+      @speed_up              = speed_up
+      @required_scale        = 0.0 #this value can be either positive or negative 
+      @resources_assigned    = resource_requirements
 
       # prepare processing policy configuration
       processing_policy_configuration = processing_policy.dup

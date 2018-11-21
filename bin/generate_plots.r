@@ -44,7 +44,7 @@ ggsave(services_dropped_fn_all, height = 5 , width = 5 * aspect_ratio)
 allocation_data <- read.csv(args[3])
 allocation_data <- allocation_data[!apply(is.na(allocation_data) | allocation_data == "", 1, all),]
 allocation_plot <- ggplot(allocation_data, aes(x=CurrentTime, y=CoreNumber, color=Service))
-allocation_plot + geom_line() + facet_wrap(~Device, ncol=2)
+allocation_plot + geom_line() + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Device, ncol=2)
 
 alllocation_plot_fn <- paste("allocation_plot_file",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
 ggsave(alllocation_plot_fn, height = 5 , width = 5 * aspect_ratio)
@@ -52,6 +52,6 @@ ggsave(alllocation_plot_fn, height = 5 , width = 5 * aspect_ratio)
 utilization_data <- read.csv(args[4])
 utilization_data_fn <- paste("device_utilization_plot",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
 utilization_plot <- ggplot(utilization_data, aes(x=CurrentTime, y=Utilization, color=Device))
-utilization_plot + geom_line() + facet_wrap(~Device, ncol=2)
+utilization_plot + geom_line()  +  ylab("Allocated Cores") +  facet_wrap(~Device, ncol=2)
 ggsave(utilization_data_fn, height = 5 , width = 5 * aspect_ratio)
 
