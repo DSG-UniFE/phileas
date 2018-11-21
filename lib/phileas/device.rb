@@ -99,7 +99,11 @@ module Phileas
             if service_resources_tmp == 0.0
               service_resources = 0.0
             else
-              service_resources = service_resources_tmp.round.to_f #(service_resources_tmp % allocable_resources).round
+              if service_resources_tmp > allocable_resources
+                service_resources = (service_resources_tmp - (service_resources_tmp % allocable_resources)).round
+              else
+                service_resources = service_resources_tmp.round.to_f 
+              end
             end
             allocable_resources -= service_resources.to_f
             puts "Resources assigned: #{service_resources}"
@@ -114,17 +118,14 @@ module Phileas
         # calculate resource requirements
         #resource_requirements = 0.0
         puts "**** Allocated cores #{allocated_cores}/#{@resource_pool} for #{@services.length} services ***"
-        resources_check = 0.0
+        raise "Error, there is an error in the allocation algorithm. Allocated #{allocated_cores} " if allocated_cores.to_f > @resource_pool.to_f
         # we probably do not need to update total_resoureces_required here
+        resources_check = 0.0
         @services.each do |x|
-          # What should we use here? requirements and assignement or requirements and speed up
-          # resource_requirements += x.resource_requirements
           resources_check += x.resources_assigned
           puts "#{x} is using #{x.resources_assigned}/#{@resource_pool}"
         end
-        # @total_resources_required =  resource_requirements
         puts "**** End Allocated cores ***"
-        raise "Error, there is an error in the allocation algorithm. Allocated #{allocated_cores}, assigned #{resources_check} " if resources_check > allocated_cores
       end
   end
 
