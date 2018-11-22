@@ -296,9 +296,6 @@ module Phileas
           puts "Current time: #{@current_time} \t Time to next generation  #{time_to_next_generation}"
           new_event(Event::ET_SERVICE_SPEEDUP, [scale], @current_time + time_to_next_generation)     
         end
-        #@active_service_repository.each do |serv|
-        #  puts "Simulating an incresead interest for service #{serv}"
-        #end
       end
 
       def dispatch_crio_message(msg)
