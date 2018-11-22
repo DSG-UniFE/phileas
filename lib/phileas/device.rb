@@ -99,8 +99,10 @@ module Phileas
             if service_resources_tmp == 0.0
               service_resources = 0.0
             else
-              if service_resources_tmp > allocable_resources
+              if service_resources_tmp > allocable_resources && allocable_resources > 1.0
                 service_resources = (service_resources_tmp - (service_resources_tmp % allocable_resources)).round
+              elsif allocable_resources == 1.0
+                service_resources = 1.0
               else
                 service_resources = service_resources_tmp.round.to_f 
               end
