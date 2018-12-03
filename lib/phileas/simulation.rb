@@ -205,7 +205,6 @@ module Phileas
           speed_up = rand(avg_cores) ** Math::log(log_exp, log_base)
           # need to reallocate the resource requirements only for that service
           # here we simulate an increased or a decreas interest in the service
-          scale = 0
           if rand > 0.5 
             # simulate a peak of interest 
             scale = speed_up.round
