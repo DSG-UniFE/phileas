@@ -181,7 +181,8 @@ module Phileas
       @services_benchmark.close
       @state = :not_running
       @event_queue = nil
-      #`Rscript --vanilla bin/generate_plots.r #{@voi_benchmark.path}`
+      `Rscript --vanilla bin/generate_plots.r #{@voi_benchmark.path}`
+      puts "File for benchmarking: #{@voi_benchmark.path}"
     end
 
     # TODO: consider refactoring the following methods and moving them out of the Simulator class

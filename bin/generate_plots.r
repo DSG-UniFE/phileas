@@ -5,6 +5,7 @@ if (length(args)==0) {
 }
 # loading ggplot2 library
 library(ggplot2)
+library(dplyr)
 
 # args[1] filename
 filename <- args[1]
@@ -20,12 +21,28 @@ height <- 7
 
 #ggsave(voict_fn,  height = 5 , width = 5 * aspect_ratio)
 
-vp + geom_smooth() + xlab("Time") #+ geom_smooth(data = voi_data, aes(x=nr, y=OutputVoI, color=ActiveServices)) +
+vp + geom_smooth(data = voi_data, aes(x=nr, y=OutputVoI, color=ActiveServices)) +
         ylab("VoI") + theme_bw() + theme(text = element_text(size=15)) 
 voict_fn_all <- paste("voi_ct_all_",gsub("[a-z _ .]", "", filename), ".png", sep="")
 
 # save plot with all services on the same graph
 ggsave(voict_fn_all, height = 5 , width = 5 * aspect_ratio)
+
+# we also need to plot the mean(VoI) for each service
+
+gd <- voi_data %>% group_by(ContentType) %>% summarise(OutputVoI = mean(OutputVoI))
+
+gdp <- ggplot(voi_data, aes(x=ContentType, y=OutputVoI, color=ContentType)) 
+gdp + geom_point() + geom_bar(data = gd, stat = "identity", alpha= .3) + guides(color = "none", fill = "none") +
+xlab("Service") + ylab("VoI") + theme_bw() + theme(text = element_text(size=15)) 
+
+voi_means <- paste("voi_means",gsub("[a-z _ .]", "", filename), ".png", sep="")
+
+ggsave(voi_means, height = 5 , width = 5 * aspect_ratio)
+
+#stat_summary(fun.y="mean", geom="bar")
+
+
 
 processed_data_plot <- ggplot(voi_data, aes(x=ContentType, group=ContentType, fill=ContentType))
 processed_data_plot + geom_histogram(stat="count") + theme(legend.position="none") + ylab("Messages") + xlab("ContentType") + theme_bw()
