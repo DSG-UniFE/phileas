@@ -84,6 +84,8 @@ module Phileas
         @total_resources_required = @services.inject(0) {|sum, x| sum += x.resource_requirements}
         allocated_cores = 0.0
         @services.each do |x|
+          log_base = x.speed_up[:base]
+          log_exp = x.speed_up[:exp]
           unless allocable_resources === 0
             puts "Resource assigned: #{x.resources_assigned}\t required_requirements: #{x.resource_requirements}\t total_required: #{@total_resources_required}"
             # x.required_scale = 0 if ( x.resources_assigned + x.required_scale ) <= 0
@@ -109,13 +111,16 @@ module Phileas
             end
             allocable_resources -= service_resources.to_f
             puts "Resources assigned: #{service_resources}"
+            x.numerical_speed_up = service_resources ** Math::log(log_exp, log_base) - x.resources_assigned ** Math::log(log_exp, log_base)
             x.assign_resources(service_resources) 
             allocated_cores +=  service_resources
             x.resources_assigned = service_resources
           else 
             x.assign_resources(0.0)
             x.resources_assigned = 0.0
+            x.numerical_speed_up = 0.0 ** Math::log(log_exp, log_base) - x.resources_assigned ** Math::log(log_exp, log_base)
           end
+          puts "**** Desired speedup #{x.numerical_speed_up} for service #{x}"
         end
         # calculate resource requirements
         #resource_requirements = 0.0

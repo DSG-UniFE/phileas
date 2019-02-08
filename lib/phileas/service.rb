@@ -69,7 +69,7 @@ module Phileas
     def_delegator :@processing_policy, :assign_resources
 
     # Use resource_requirement to scale up or down the allocated cores on the device
-    attr_accessor :resource_requirements, :required_scale, :resources_assigned
+    attr_accessor :resource_requirements, :required_scale, :resources_assigned, :numerical_speed_up
 
     attr_reader :device, :input_message_type, :input_content_type,
                          :activation_time, :speed_up, :output_content_type
@@ -89,6 +89,7 @@ module Phileas
       @speed_up              = speed_up
       @required_scale        = 0.0 #this value can be either positive or negative 
       @resources_assigned    = resource_requirements
+      @numerical_speed_up    = 0.0
 
       # prepare processing policy configuration
       processing_policy_configuration = processing_policy.dup

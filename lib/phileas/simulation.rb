@@ -74,7 +74,7 @@ module Phileas
       @services_benchmark = File.open("sim_services_data#{time}.csv", 'w')
       @services_benchmark << "CurrentTime,MsgType,MsgContentType,Dropped,ResourcesRequirements,AvailableResources,ActiveServices,EdgeResourcesUsed\n"
       @resources_allocation = File.open("resources_allocation_data#{time}.csv", 'w')
-      @resources_allocation << "CurrentTime,Service,Device,CoreNumber,Scale,DeviceResources\n"
+      @resources_allocation << "CurrentTime,Service,Device,CoreNumber,Scale,DeviceResources,DesiredSpeedUp\n"
       @device_utilization = File.open("device_utilization#{time}.csv", 'w')
       @device_utilization << "CurrentTime,Device,Utilization,DeviceResources\n"
     end
@@ -205,6 +205,7 @@ module Phileas
           speed_up = rand(avg_cores) ** Math::log(log_exp, log_base)
           # need to reallocate the resource requirements only for that service
           # here we simulate an increased or a decreas interest in the service
+          #calculate the numerical speed_up
           if rand > 0.5 
             # simulate a peak of interest 
             scale = speed_up.round
@@ -225,7 +226,7 @@ module Phileas
             end
           end
           @active_service_repository.find_active_services(@current_time).each do |s|
-            @resources_allocation << "#{@current_time},#{s.output_content_type},#{s.device},#{s.resources_assigned},#{s.required_scale},#{s.device.resources}\n "
+            @resources_allocation << "#{@current_time},#{s.output_content_type},#{s.device},#{s.resources_assigned},#{s.required_scale},#{s.device.resources},#{s.numerical_speed_up}\n "
           end
           schedule_speed_up_event_generation
 
