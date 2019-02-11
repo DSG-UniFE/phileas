@@ -34,11 +34,21 @@ gd <- voi_data %>% group_by(ContentType) %>% summarise(OutputVoI = mean(OutputVo
 
 gdp <- ggplot(voi_data, aes(x=ContentType, y=OutputVoI, color=ContentType)) 
 gdp + geom_point() + geom_bar(data = gd, stat = "identity", alpha= .3) + guides(color = "none", fill = "none") +
-xlab("Service") + ylab("VoI") + theme_bw() + theme(text = element_text(size=15)) 
+xlab("Services") + ylab("VoI") + theme_bw() + theme(text = element_text(size=15)) 
 
-voi_means <- paste("voi_means",gsub("[a-z _ .]", "", filename), ".png", sep="")
+voi_means <- paste("voi_means_",gsub("[a-z _ .]", "", filename), ".png", sep="")
 
 ggsave(voi_means, height = 5 , width = 5 * aspect_ratio)
+
+# CRIOs processed
+
+gdp <- ggplot(voi_data, aes(ContentType)) 
+gdp + geom_bar(datastat = "identity", aes(fill = ContentType)) + guides(color = "none", fill = "none") +
+xlab("Services") + ylab("# CRIOs") + theme_bw() + theme(text = element_text(size=15)) 
+
+crios <- paste("crios_",gsub("[a-z _ .]", "", filename), ".png", sep="")
+
+ggsave(crios, height = 5 , width = 5 * aspect_ratio)
 
 #stat_summary(fun.y="mean", geom="bar")
 
