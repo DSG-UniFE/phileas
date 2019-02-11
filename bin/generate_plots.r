@@ -50,8 +50,28 @@ crios <- paste("crios_",gsub("[a-z _ .]", "", filename), ".png", sep="")
 
 ggsave(crios, height = 5 , width = 5 * aspect_ratio)
 
-#stat_summary(fun.y="mean", geom="bar")
+# Users distribution during the simulation time
 
+gd <- voi_data %>% group_by(ContentType) %>% summarise(Users = mean(Users))
+
+gdp <- ggplot(voi_data, aes(x=ContentType, y=Users, color=ContentType)) 
+gdp + geom_point() + geom_bar(data = gd, stat = "identity", alpha= .3) + guides(color = "none", fill = "none") +
+xlab("Services") + ylab("Users") + theme_bw() + theme(text = element_text(size=15)) 
+
+users_mean <- paste("users_mean_",gsub("[a-z _ .]", "", filename), ".png", sep="")
+
+ggsave(users_mean, height = 5 , width = 5 * aspect_ratio)
+
+# Users during the time
+
+vpu <- ggplot(voi_data, aes(x=nr, y=Users, color=ContentType))
+
+vpu + geom_point() + facet_wrap(~ContentType, nrow=2) + #+ geom_smooth(data = voi_data, aes(x=nr, y=Users, color=ContentType)) +
+        ylab("Users") + xlab("Time") + theme_bw() + theme(text = element_text(size=15), legend.position = "none") #theme(legend.position="none")
+
+users_all <- paste("users_all_",gsub("[a-z _ .]", "", filename), ".png", sep="")
+
+ggsave(users_all, height = 5 , width = 5 * aspect_ratio)
 
 
 processed_data_plot <- ggplot(voi_data, aes(x=ContentType, group=ContentType, fill=ContentType))
