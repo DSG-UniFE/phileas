@@ -46,7 +46,7 @@ module Phileas
     #  @services.each {|x| x.assign_resources((x.resource_requirements / @total_resources_required) * @resource_pool)  }
     #end
     # here we need to redefine the basic reallocate_resources method
-     
+
     def reallocate_resources
         # scales resources based on the device' resource pool
         # instead of using a 0..1 scale
@@ -65,8 +65,8 @@ module Phileas
             end
             allocable_resources -= service_resources
             puts "Resources assigned: #{service_resources} "
-            x.assign_resources(service_resources) 
-          else 
+            x.assign_resources(service_resources)
+          else
             x.assign_resources(0.0)
             x.resources_assigned = 0.0
           end
@@ -89,7 +89,6 @@ module Phileas
           unless allocable_resources === 0
             puts "Resource assigned: #{x.resources_assigned}\t required_requirements: #{x.resource_requirements}\t total_required: #{@total_resources_required}"
             # x.required_scale = 0 if ( x.resources_assigned + x.required_scale ) <= 0
-            
             # zero check
             unless @total_resources_required == 0.0
                service_resources_tmp = ( (x.resource_requirements.to_f / @total_resources_required.to_f) * @resource_pool)
@@ -102,20 +101,20 @@ module Phileas
               service_resources = 0.0
             else
               if service_resources_tmp > allocable_resources && allocable_resources > 1.0
-                service_resources = (service_resources_tmp - (service_resources_tmp % allocable_resources)).round
+                service_resources = (service_resources_tmp - (service_resources_tmp % allocable_resources)).round.to_f
               elsif allocable_resources == 1.0
                 service_resources = 1.0
               else
-                service_resources = service_resources_tmp.round.to_f 
+                service_resources = service_resources_tmp.round.to_f
               end
             end
             allocable_resources -= service_resources.to_f
             puts "Resources assigned: #{service_resources}"
             x.numerical_speed_up = service_resources ** Math::log(log_exp, log_base) - x.resources_assigned ** Math::log(log_exp, log_base)
-            x.assign_resources(service_resources) 
+            x.assign_resources(service_resources)
             allocated_cores +=  service_resources
-            x.resources_assigned = service_resources
-          else 
+            x.resources_assigned = service_resources.to_f
+          else
             x.assign_resources(0.0)
             x.resources_assigned = 0.0
             x.numerical_speed_up = 0.0 ** Math::log(log_exp, log_base) - x.resources_assigned ** Math::log(log_exp, log_base)
@@ -130,7 +129,7 @@ module Phileas
         resources_check = 0.0
         @services.each do |x|
           resources_check += x.resources_assigned
-          puts "#{x} is using #{x.resources_assigned}/#{@resource_pool}"
+          puts "#{x.output_content_type} is using #{x.resources_assigned}/#{@resource_pool}"
         end
         puts "**** End Allocated cores ***"
       end

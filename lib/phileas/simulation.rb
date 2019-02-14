@@ -72,7 +72,7 @@ module Phileas
       @voi_benchmark  << "CurrentTime,InputVoI,OriginatingTime,Users,OutputVoI,ContentType,ActiveServices\n"
       #services benchmakr file (aggregated/dropped/ messages) resources' status
       @services_benchmark = File.open("sim_services_data#{time}.csv", 'w')
-      @services_benchmark << "CurrentTime,MsgType,MsgContentType,Dropped,ResourcesRequirements,AvailableResources,ActiveServices,EdgeResourcesUsed\n"
+      @services_benchmark << "CurrentTime,MsgType,MsgContentType,Dropped,ResourcesRequirements,AvailableResources,ActiveServices,EdgeResourcesUsed,Device\n"
       @resources_allocation = File.open("resources_allocation_data#{time}.csv", 'w')
       @resources_allocation << "CurrentTime,Service,Device,CoreNumber,Scale,DeviceResources,DesiredSpeedUp\n"
       @device_utilization = File.open("device_utilization#{time}.csv", 'w')
@@ -152,10 +152,10 @@ module Phileas
           # perform message dispatching accordingly
           unless new_msg.nil?
             dispatch_message(new_msg)
-            @services_benchmark << "#{@current_time},#{msg.type},#{msg.content_type},false,#{service.resource_requirements},#{service.device.available_resources},#{@active_service_repository.find_active_services(@current_time).length},#{resources_in_use_at_the_edge(@device_repository)}\n"
+            @services_benchmark << "#{@current_time},#{msg.type},#{msg.content_type},false,#{service.resource_requirements},#{service.device.available_resources},#{@active_service_repository.find_active_services(@current_time).length},#{resources_in_use_at_the_edge(@device_repository)},#{service.device}\n"
           else
             #log if message has been dropped
-            @services_benchmark << "#{@current_time},#{msg.type},#{msg.content_type},true,#{service.resource_requirements},#{service.device.available_resources},#{@active_service_repository.find_active_services(@current_time).length},#{resources_in_use_at_the_edge(@device_repository)}\n"
+            @services_benchmark << "#{@current_time},#{msg.type},#{msg.content_type},true,#{service.resource_requirements},#{service.device.available_resources},#{@active_service_repository.find_active_services(@current_time).length},#{resources_in_use_at_the_edge(@device_repository)},#{service.device}\n"
           end
 
 
@@ -206,8 +206,8 @@ module Phileas
           # need to reallocate the resource requirements only for that service
           # here we simulate an increased or a decreas interest in the service
           #calculate the numerical speed_up
-          if rand > 0.5 
-            # simulate a peak of interest 
+          if rand > 0.5
+            # simulate a peak of interest
             scale = speed_up.round
           else
             scale = -speed_up.round
@@ -236,7 +236,7 @@ module Phileas
           break
         end
       end
-  
+
       @voi_benchmark.close
       @services_benchmark.close
       @resources_allocation.close
@@ -253,7 +253,7 @@ module Phileas
         update_progress_bar
         if @current_time <= (@configuration.start_time + @configuration.duration)
           time_to_next_generation, raw_msg = data_source.generate(@current_time)
-          new_event(Event::ET_RAW_DATA_MESSAGE_GENERATION, [ raw_msg, data_source ], @current_time + time_to_next_generation)     
+          new_event(Event::ET_RAW_DATA_MESSAGE_GENERATION, [ raw_msg, data_source ], @current_time + time_to_next_generation)
         end
       end
 
@@ -294,7 +294,7 @@ module Phileas
           # schedule a reallocation event each 1800 seconds
           time_to_next_generation = 1800.to_f
           puts "Current time: #{@current_time} \t Time to next generation  #{time_to_next_generation}"
-          new_event(Event::ET_SERVICE_SPEEDUP, [scale], @current_time + time_to_next_generation)     
+          new_event(Event::ET_SERVICE_SPEEDUP, [scale], @current_time + time_to_next_generation)
         end
       end
 
