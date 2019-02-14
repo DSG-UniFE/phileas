@@ -2,6 +2,8 @@
 *.rbc
 *.dat
 *.log
+*.csv
+*.png
 /.config
 /coverage/
 /doc/
