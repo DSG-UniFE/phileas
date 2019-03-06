@@ -5,17 +5,22 @@ module Phileas
 
   class Message
 
-    attr_reader :size, :content_type, :type, :originating_location, :starting_voi, :originating_time
+    attr_reader :size, :content_type, :type, :originating_location,
+    :starting_voi, :originating_time
+
+    # keep track of the last device that processed the message
+    attr_accessor :device
 
     def initialize(size:, type:, content_type:, starting_voi:,
                    originating_time:, originating_location:, time_decay:,
-                   space_decay: nil)
+                   device: nil, space_decay: nil)
       @size                 = size
       @type                 = type
       @content_type         = content_type
       @starting_voi         = starting_voi
       @originating_time     = originating_time
       @originating_location = originating_location
+      @device               = device
       @time_decay_function  = ValueDecayCalculator.new(initial_value: @originating_time,
                                                        decay_logic: time_decay)
 

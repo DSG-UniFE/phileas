@@ -27,7 +27,7 @@ module Phileas
     def process_message_with_voi(value)
       # reject messages if resources are not sufficient
       # for the moment we implement a linear message drop policy
-      # if the device has no available resources,the message will be dropped 
+      # if the device has no available resources,the message will be dropped
       # resources assigined to this service
       threshold = @resources_assigned * value
       if (threshold < 1.0)
@@ -87,7 +87,7 @@ module Phileas
       @space_decay           = space_decay
       @activation_time       = activation_time
       @speed_up              = speed_up
-      @required_scale        = 0.0 #this value can be either positive or negative 
+      @required_scale        = 0.0 #this value can be either positive or negative
       @resources_assigned    = resource_requirements
       @numerical_speed_up    = 0.0
 
@@ -116,6 +116,7 @@ module Phileas
           originating_location: @device.location,
           time_decay:           @time_decay,
           space_decay:          @space_decay,
+          device:               @device,
         }
         return Message.new(attrs.merge!(size_and_voi_attrs))
       end

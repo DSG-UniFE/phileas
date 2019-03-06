@@ -28,7 +28,8 @@ voict_fn_all <- paste("voi_ct_all_",gsub("[a-z _ .]", "", filename), ".png", sep
 ggsave(voict_fn_all, height = 5 , width = 5 * aspect_ratio)
 
 processed_data_plot <- ggplot(voi_data, aes(x=ContentType, group=ContentType, fill=ContentType))
-processed_data_plot + geom_histogram(stat="count") + theme(legend.position="none") + ylab("Messages") + xlab("ContentType") + theme_bw()
+processed_data_plot + geom_histogram(stat="count") + facet_wrap(~Device, ncol=2) + theme(legend.position="none") +
+ylab("Messages") + xlab("ContentType") + theme_bw()
 processed_data_file <- paste("voi_ct_processed_",gsub("[a-z _ .]", "", filename), ".png", sep="")
 
 ggsave(processed_data_file, height = 5 , width = 5 * aspect_ratio)
@@ -48,6 +49,15 @@ allocation_plot + geom_line() + xlab("Time") +  ylab("Allocated Cores") + facet_
 
 alllocation_plot_fn <- paste("allocation_plot_file_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
 ggsave(alllocation_plot_fn, height = 5 , width = 5 * aspect_ratio)
+
+# here define another plot using ContentType as face wrap
+
+allocation_plot <- ggplot(allocation_data, aes(x=CurrentTime, y=CoreNumber, color=Device))
+allocation_plot + geom_line() + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Service, ncol=2)
+
+alllocation_plot_fn_2 <- paste("allocation_plot_service_file_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
+ggsave(alllocation_plot_fn_2, height = 5 , width = 5 * aspect_ratio)
+
 
 utilization_data <- read.csv(args[4])
 utilization_data_fn <- paste("device_utilization_plot_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
