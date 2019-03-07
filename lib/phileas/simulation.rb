@@ -206,7 +206,7 @@ module Phileas
           unless transmission_time.nil?
             new_event(Event::ET_RAW_DATA_MESSAGE_ARRIVAL, [ msg, serv ], @current_time + transmission_time)
           else
-            #$stderr.puts "transmission is unfeasible"
+            #$stderr.puts "raw_data message transmission is unfeasible"
           end
         end
       end
@@ -220,7 +220,7 @@ module Phileas
           unless transmission_time.nil?
             new_event(Event::ET_IO_MESSAGE_ARRIVAL, [ msg, serv ], @current_time + transmission_time)
           else
-            #$stderr.puts "transmission is unfeasible"
+            #$stderr.puts "io message transmission is unfeasible"
           end
         end
       end
@@ -237,7 +237,7 @@ module Phileas
               unless transmission_time.nil?
                 new_event(Event::ET_CRIO_MESSAGE_ARRIVAL, [ msg, ug ], @current_time + transmission_time)
               else
-                #$stderr.puts "transmission is unfeasible"
+                #$stderr.puts "crio message transmission is unfeasible"
               end
             end
           end
