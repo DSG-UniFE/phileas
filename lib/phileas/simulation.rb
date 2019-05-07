@@ -77,6 +77,8 @@ module Phileas
       @resources_allocation << "CurrentTime,Service,Device,CoreNumber,Scale,DeviceResources,DesiredSpeedUp\n"
       @device_utilization = File.open("device_utilization#{time}.csv", 'w')
       @device_utilization << "CurrentTime,Device,Utilization,DeviceResources\n"
+      @speed_up_event_benchmark = File.open("speed_up_event_benchmark#{time}.csv", 'w')
+      @speed_up_event_benchmark << "CurrentTime\n"
     end
 
     def new_event(type, data, time)
@@ -112,11 +114,9 @@ module Phileas
         schedule_next_raw_data_message_generation(ds)
       end
 
-      # schedule intial generation of speed_up events
-      #puts "Active services at this time #{@active_service_repository.find_active_services(@current_time)}"
-      #@active_service_repository.find_active_services(@current_time).each do |as|
-      #  schedule_speed_up_event_generation
-      #end
+      # schedule the generation of the first speed_up event
+      schedule_speed_up_event_generation
+
       current_event = 0
 
       # launch simulation
@@ -179,7 +179,6 @@ module Phileas
         when Event::ET_SERVICE_ACTIVATION
           serv = ServiceFactory.create(e.data)
           @active_service_repository.add(serv)
-          schedule_speed_up_event_generation
 
 
         when Event::ET_SERVICE_SHUTDOWN
@@ -187,7 +186,8 @@ module Phileas
 
 
         when Event::ET_SERVICE_SPEEDUP
-          puts "ET_SERVICE_SPEEDUP event generated"
+          puts "ET_SERVICE_SPEEDUP event generated at time: #{@current_time}"
+          @speed_up_event_benchmark << "#{@current_time}\n"
           # for each ET_SERVICE_SPEEDUP event select a service randomly
           selected_service = rand(@active_service_repository.find_active_services(@current_time).length)
           service = @active_service_repository.find_active_services(@current_time)[selected_service]
@@ -225,9 +225,12 @@ module Phileas
               @device_utilization << "#{@current_time},#{dev[1]},#{(dev[1].resources - dev[1].available_resources).round},#{dev[1].resources}\n"
             end
           end
+          #puts "**********"
           @active_service_repository.find_active_services(@current_time).each do |s|
+            #puts "Benchmarking reallocation data for service #{s.output_content_type} on device: #{s.device} at time #{@current_time}"
             @resources_allocation << "#{@current_time},#{s.output_content_type},#{s.device},#{s.resources_assigned},#{s.required_scale},#{s.device.resources},#{s.numerical_speed_up}\n "
           end
+          #puts "**********"
           schedule_speed_up_event_generation
 
 
@@ -241,9 +244,12 @@ module Phileas
       @services_benchmark.close
       @resources_allocation.close
       @device_utilization.close
+      @speed_up_event_benchmark.close
       @state = :not_running
       @event_queue = nil
       # sleep before drawing the graphs
+      puts "*** #{self.class.name} About to generate plots.... ***"
+      puts "Rscript --vanilla bin/generate_plots.r #{@voi_benchmark.path} #{@services_benchmark.path} #{@resources_allocation.path} #{@device_utilization.path}"
       `sleep 2; Rscript --vanilla bin/generate_plots.r #{@voi_benchmark.path} #{@services_benchmark.path} #{@resources_allocation.path} #{@device_utilization.path}`
     end
 

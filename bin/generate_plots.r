@@ -44,23 +44,54 @@ ggsave(services_dropped_fn_all, height = 5 , width = 5 * aspect_ratio)
 
 allocation_data <- read.csv(args[3])
 allocation_data <- allocation_data[!apply(is.na(allocation_data) | allocation_data == "", 1, all),]
+# group per Service
+
 allocation_plot <- ggplot(allocation_data, aes(x=CurrentTime, y=CoreNumber, color=Service))
-allocation_plot + geom_line() + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Device, ncol=2)
+#allocation_plot + geom_line() + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Device, ncol=1)  + theme(legend.position="bottom")
+allocation_plot + geom_point() + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Device, ncol=1)  + theme(legend.position="bottom")
 
 alllocation_plot_fn <- paste("allocation_plot_file_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
-ggsave(alllocation_plot_fn, height = 5 , width = 5 * aspect_ratio)
+ggsave(alllocation_plot_fn)
+
+# the same as above but with geom_line() instread of coint
+allocation_plot + geom_line() + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Device, ncol=1)  + theme(legend.position="bottom")
+alllocation_plot_fn <- paste("allocation_plot_line_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
+ggsave(alllocation_plot_fn)
+
+#ggsave(alllocation_plot_fn, height = 5 , width = 5 * aspect_ratio)
 
 # here define another plot using ContentType as face wrap
+# remove legend theme(legend.position = "none") .
 
+#scale_fill_discrete(guide = guide_legend()) + theme(legend.position="bottom")
+
+# group per Device
 allocation_plot <- ggplot(allocation_data, aes(x=CurrentTime, y=CoreNumber, color=Device))
-allocation_plot + geom_line() + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Service, ncol=2)
+#allocation_plot + geom_line() + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Service, ncol=1) + scale_fill_discrete(guide = guide_legend()) + theme(legend.position="bottom")
+allocation_plot + geom_point() + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Service, ncol=1) + scale_fill_discrete(guide = guide_legend()) + theme(legend.position="bottom")
 
 alllocation_plot_fn_2 <- paste("allocation_plot_service_file_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
-ggsave(alllocation_plot_fn_2, height = 5 , width = 5 * aspect_ratio)
+#ggsave(alllocation_plot_fn_2, height = 5 , width = 5 * aspect_ratio)
+ggsave(alllocation_plot_fn_2)
+
+# the same as above but with geom_line instead of geom_poiny
+allocation_plot + geom_line() + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Service, ncol=1) + scale_fill_discrete(guide = guide_legend()) + theme(legend.position="bottom")
+alllocation_plot_fn_2 <- paste("allocation_plot_service_line_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
+ggsave(alllocation_plot_fn_2)
+
+
 
 
 utilization_data <- read.csv(args[4])
 utilization_data_fn <- paste("device_utilization_plot_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
 utilization_plot <- ggplot(utilization_data, aes(x=CurrentTime, y=Utilization, color=Device))
-utilization_plot + geom_line()  +  ylab("Allocated Cores") +  facet_wrap(~Device, ncol=2)
-ggsave(utilization_data_fn, height = 5 , width = 5 * aspect_ratio)
+utilization_plot + geom_line()  +  ylab("Allocated Cores") +  facet_wrap(~Device, ncol=1) + theme(legend.position = "none")
+#ggsave(utilization_data_fn, height = 5 , width = 5 * aspect_ratio)
+ggsave(utilization_data_fn)
+
+
+print("Allocation data files\n\n")
+
+print(args[3])
+
+print(args[4])

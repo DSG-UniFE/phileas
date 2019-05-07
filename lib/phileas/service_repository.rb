@@ -8,6 +8,7 @@ module Phileas
     end
 
     def add(service)
+      # need to insert a check. it this service already exist it should not be activated
       @services << service
     end
 
