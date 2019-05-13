@@ -179,6 +179,9 @@ module Phileas
         when Event::ET_SERVICE_ACTIVATION
           serv = ServiceFactory.create(e.data)
           @active_service_repository.add(serv)
+          # add this missing benchmark. 
+          # check the csv file
+          # @resources_allocation << "#{@current_time},#{serv.output_content_type},#{serv.device},#{serv.resources_assigned},#{serv.required_scale},#{serv.device.resources},#{serv.numerical_speed_up}\n"
 
 
         when Event::ET_SERVICE_SHUTDOWN
@@ -225,12 +228,10 @@ module Phileas
               @device_utilization << "#{@current_time},#{dev[1]},#{(dev[1].resources - dev[1].available_resources).round},#{dev[1].resources}\n"
             end
           end
-          #puts "**********"
           @active_service_repository.find_active_services(@current_time).each do |s|
             #puts "Benchmarking reallocation data for service #{s.output_content_type} on device: #{s.device} at time #{@current_time}"
             @resources_allocation << "#{@current_time},#{s.output_content_type},#{s.device},#{s.resources_assigned},#{s.required_scale},#{s.device.resources},#{s.numerical_speed_up}\n "
           end
-          #puts "**********"
           schedule_speed_up_event_generation
 
 

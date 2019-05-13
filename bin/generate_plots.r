@@ -48,7 +48,8 @@ allocation_data <- allocation_data[!apply(is.na(allocation_data) | allocation_da
 
 allocation_plot <- ggplot(allocation_data, aes(x=CurrentTime, y=CoreNumber, color=Service))
 #allocation_plot + geom_line() + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Device, ncol=1)  + theme(legend.position="bottom")
-allocation_plot + geom_point() + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Device, ncol=1)  + theme(legend.position="bottom")
+allocation_plot + geom_point(position=position_jitter(h=0.05, w=0.05),
+             , alpha = 0.5, size = 1.5) + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Device, ncol=1)  + theme(legend.position="bottom")
 
 alllocation_plot_fn <- paste("allocation_plot_file_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
 ggsave(alllocation_plot_fn)
@@ -68,7 +69,8 @@ ggsave(alllocation_plot_fn)
 # group per Device
 allocation_plot <- ggplot(allocation_data, aes(x=CurrentTime, y=CoreNumber, color=Device))
 #allocation_plot + geom_line() + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Service, ncol=1) + scale_fill_discrete(guide = guide_legend()) + theme(legend.position="bottom")
-allocation_plot + geom_point() + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Service, ncol=1) + scale_fill_discrete(guide = guide_legend()) + theme(legend.position="bottom")
+allocation_plot + geom_point(position=position_jitter(h=0.05, w=0.05),
+            , alpha = 0.75, size = 1.5) + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Service, ncol=1) + scale_fill_discrete(guide = guide_legend()) + theme(legend.position="bottom")
 
 alllocation_plot_fn_2 <- paste("allocation_plot_service_file_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
 #ggsave(alllocation_plot_fn_2, height = 5 , width = 5 * aspect_ratio)
