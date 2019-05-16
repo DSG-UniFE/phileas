@@ -299,6 +299,8 @@ module Phileas
           scale = @serv_speedup_rv.next
           # time_to_next_generation = scale * 100000
           # schedule a reallocation event each 1800 seconds
+          # an improvements here, it is select also a location and the reallocate
+          # the resource only for the devices nearby
           time_to_next_generation = 1800.to_f
           puts "Current time: #{@current_time} \t Time to next generation  #{time_to_next_generation}"
           new_event(Event::ET_SERVICE_SPEEDUP, [scale], @current_time + time_to_next_generation)
