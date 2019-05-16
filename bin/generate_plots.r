@@ -81,15 +81,36 @@ allocation_plot + geom_line() + xlab("Time") +  ylab("Allocated Cores") + facet_
 alllocation_plot_fn_2 <- paste("allocation_plot_service_line_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
 ggsave(alllocation_plot_fn_2)
 
-
-
-
 utilization_data <- read.csv(args[4])
 utilization_data_fn <- paste("device_utilization_plot_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
 utilization_plot <- ggplot(utilization_data, aes(x=CurrentTime, y=Utilization, color=Device))
 utilization_plot + geom_line()  +  ylab("Allocated Cores") +  facet_wrap(~Device, ncol=1) + theme(legend.position = "none")
 #ggsave(utilization_data_fn, height = 5 , width = 5 * aspect_ratio)
 ggsave(utilization_data_fn)
+
+
+# Users distribution during the simulation time
+
+gd <- voi_data %>% group_by(ContentType) %>% summarise(Users = mean(Users))
+
+gdp <- ggplot(voi_data, aes(x=ContentType, y=Users, color=ContentType)) 
+gdp + geom_point() + geom_bar(data = gd, stat = "identity", alpha= .3) + guides(color = "none", fill = "none") +
+xlab("Services") + ylab("Users") + theme_bw() + theme(text = element_text(size=15)) 
+
+users_mean <- paste("users_mean_",gsub("[a-z _ .]", "", filename), ".png", sep="")
+
+ggsave(users_mean, height = 5 , width = 5 * aspect_ratio)
+
+# Users during the time
+
+vpu <- ggplot(voi_data, aes(x=nr, y=Users, color=ContentType))
+
+vpu + geom_point() + facet_wrap(~ContentType, nrow=2) + #+ geom_smooth(data = voi_data, aes(x=nr, y=Users, color=ContentType)) +
+        ylab("Users") + xlab("Time") + theme_bw() + theme(text = element_text(size=15), legend.position = "none") #theme(legend.position="none")
+
+users_all <- paste("users_all_",gsub("[a-z _ .]", "", filename), ".png", sep="")
+
+ggsave(users_all, height = 5 , width = 5 * aspect_ratio)
 
 
 print("Allocation data files\n\n")
