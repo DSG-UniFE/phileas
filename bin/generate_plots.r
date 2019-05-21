@@ -5,6 +5,9 @@ if (length(args)==0) {
 }
 # loading ggplot2 library
 library(ggplot2)
+# for data manipulation
+library(dplyr)
+
 
 # args[1] filename
 filename <- args[1]
@@ -24,19 +27,39 @@ vp + geom_smooth() + xlab("Time") #+ geom_smooth(data = voi_data, aes(x=nr, y=Ou
         ylab("VoI") + theme_bw() + theme(text = element_text(size=15))
 voict_fn_all <- paste("voi_ct_all_",gsub("[a-z _ .]", "", filename), ".png", sep="")
 
+
+# we also need to plot the mean(VoI) for each service
+
+gd <- voi_data %>% group_by(ContentType) %>% summarise(OutputVoI = mean(OutputVoI))
+
+gdp <- ggplot(voi_data, aes(x=ContentType, y=OutputVoI, color=ContentType)) 
+gdp + geom_point() + geom_bar(data = gd, stat = "identity", alpha= .3) + guides(color = "none", fill = "none") +
+xlab("Services") + ylab("VoI") + facet_wrap(~ContentType, nrow=4) + theme_bw() + 
+theme(legend.position="none", text = element_text(size=10), axis.text.x=element_blank(),axis.ticks.x=element_blank()) 
+
+voi_means <- paste("voi_means_",gsub("[a-z _ .]", "", filename), ".png", sep="")
+
+#ggsave(voi_means, height = 5 , width = 5 * aspect_ratio)
+ggsave(voi_means)
+
 # save plot with all services on the same graph
 ggsave(voict_fn_all, height = 5 , width = 5 * aspect_ratio)
 
 processed_data_plot <- ggplot(voi_data, aes(x=ContentType, group=ContentType, fill=ContentType))
 processed_data_plot + geom_histogram(stat="count") + facet_wrap(~Device, ncol=2) + theme(legend.position="none") +
-ylab("Messages") + xlab("ContentType") + theme_bw()
+ylab("CRIOs Messages") + xlab("ContentType") + theme_bw()
 processed_data_file <- paste("voi_ct_processed_",gsub("[a-z _ .]", "", filename), ".png", sep="")
 
 ggsave(processed_data_file, height = 5 , width = 5 * aspect_ratio)
 
+# Number of dropped/discarded messages per ContentType
+# This plot depicts the number of not eleaborated messages
+# This plot should be the opposite of the previous one
+
 services_data <- read.csv(args[2])
 services_data_plot <- ggplot(subset(services_data, Dropped %in% c("true")), aes(x=MsgContentType, group=MsgContentType, fill=MsgContentType))
-services_data_plot + geom_histogram(stat="count") + facet_wrap(~Device, ncol=2) + theme_bw() + theme(legend.position="none") + ylab("Messages") + xlab("ContentType")
+services_data_plot + geom_histogram(stat="count") + facet_wrap(~Device, ncol=2) + theme_bw() + theme(legend.position="none") +
+ylab("Discarded Messages") + xlab("ContentType")
 
 services_dropped_fn_all <- paste("services_dropped_all_",gsub("[a-z _ .]", "", filename), ".png", sep="")
 
@@ -44,8 +67,8 @@ ggsave(services_dropped_fn_all, height = 5 , width = 5 * aspect_ratio)
 
 allocation_data <- read.csv(args[3])
 allocation_data <- allocation_data[!apply(is.na(allocation_data) | allocation_data == "", 1, all),]
-# group per Service
 
+# group per Service
 allocation_plot <- ggplot(allocation_data, aes(x=CurrentTime, y=CoreNumber, color=Service))
 #allocation_plot + geom_line() + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Device, ncol=1)  + theme(legend.position="bottom")
 allocation_plot + geom_point(position=position_jitter(h=0.05, w=0.05),
@@ -95,22 +118,22 @@ gd <- voi_data %>% group_by(ContentType) %>% summarise(Users = mean(Users))
 
 gdp <- ggplot(voi_data, aes(x=ContentType, y=Users, color=ContentType)) 
 gdp + geom_point() + geom_bar(data = gd, stat = "identity", alpha= .3) + guides(color = "none", fill = "none") +
-xlab("Services") + ylab("Users") + theme_bw() + theme(text = element_text(size=15)) 
+xlab("Services") + ylab("Users") + theme_bw() + theme(text = element_text(size=10)) 
 
 users_mean <- paste("users_mean_",gsub("[a-z _ .]", "", filename), ".png", sep="")
 
-ggsave(users_mean, height = 5 , width = 5 * aspect_ratio)
+ggsave(users_mean)
 
 # Users during the time
 
 vpu <- ggplot(voi_data, aes(x=nr, y=Users, color=ContentType))
 
 vpu + geom_point() + facet_wrap(~ContentType, nrow=2) + #+ geom_smooth(data = voi_data, aes(x=nr, y=Users, color=ContentType)) +
-        ylab("Users") + xlab("Time") + theme_bw() + theme(text = element_text(size=15), legend.position = "none") #theme(legend.position="none")
+        ylab("Users") + xlab("Time") + theme_bw() + theme(text = element_text(size=10), legend.position = "none") #theme(legend.position="none")
 
 users_all <- paste("users_all_",gsub("[a-z _ .]", "", filename), ".png", sep="")
 
-ggsave(users_all, height = 5 , width = 5 * aspect_ratio)
+ggsave(users_all)
 
 
 print("Allocation data files\n\n")

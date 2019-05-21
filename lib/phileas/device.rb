@@ -74,12 +74,11 @@ module Phileas
       end
 
       def reallocate_resources_with_speedup
-        # scales resources based on the device' resource pool also assigning a speed_up or a scale_down
+        # scales resources based on the device's resource pool also assigning
         allocable_resources = @resource_pool
         puts "**** Device #{self} with #{@resource_pool} cores - Running #{@services.length} services ****"
         # update total_resources_required before performing the allocation algorithm
         rr = 0.0
-        #@services.each { |x| rr += x.resource_requirements}
         #@total_resources_required = rr
         @total_resources_required = @services.inject(0) {|sum, x| sum += x.resource_requirements}
         allocated_cores = 0.0
