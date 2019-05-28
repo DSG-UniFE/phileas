@@ -82,6 +82,17 @@ allocation_plot + geom_line() + xlab("Time") +  ylab("Allocated Cores") + facet_
 alllocation_plot_fn <- paste("allocation_plot_line_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
 ggsave(alllocation_plot_fn)
 
+# relate VoI to the number of allocated cores
+cd <- allocation_data %>% group_by(Service,CurrentTime) %>% summarise(Cores = sum(CoreNumber))
+
+cdp <- ggplot(cd, aes(x=CurrentTime, y=Cores, color=Service)) 
+
+cdp + geom_line() + #+ guides(color = "none", fill = "none") 
+xlab("Time") + ylab("Allocated Cores") + theme_bw() + theme(text = element_text(size=10)) 
+cores_voi_mean_fn <- paste("total_cores_allocated_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
+ggsave(cores_voi_mean_fn, width=15, height=8)
+
+
 #ggsave(alllocation_plot_fn, height = 5 , width = 5 * aspect_ratio)
 
 # here define another plot using ContentType as face wrap
