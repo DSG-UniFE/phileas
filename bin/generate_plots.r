@@ -7,10 +7,10 @@ if (length(args)==0) {
 library(ggplot2)
 # for data manipulation
 library(dplyr)
-
-
+#set the working direcory
+setwd("simulation_results")
 # args[1] filename
-filename <- args[1]
+filename <- basename(args[1])
 voi_data <- read.csv(filename)
 voi_data$nr <- as.numeric(row.names(voi_data))
 vp <- ggplot(voi_data, aes(x=nr, y=OutputVoI, color=ContentType))
@@ -56,7 +56,7 @@ ggsave(processed_data_file, height = 5 , width = 5 * aspect_ratio)
 # This plot depicts the number of not eleaborated messages
 # This plot should be the opposite of the previous one
 
-services_data <- read.csv(args[2])
+services_data <- read.csv(basename(args[2]))
 services_data_plot <- ggplot(subset(services_data, Dropped %in% c("true")), aes(x=MsgContentType, group=MsgContentType, fill=MsgContentType))
 services_data_plot + geom_histogram(stat="count") + facet_wrap(~Device, ncol=2) + theme_bw() + theme(legend.position="none") +
 ylab("Discarded Messages") + xlab("ContentType")
@@ -65,7 +65,7 @@ services_dropped_fn_all <- paste("services_dropped_all_",gsub("[a-z _ .]", "", f
 
 ggsave(services_dropped_fn_all, height = 5 , width = 5 * aspect_ratio)
 
-allocation_data <- read.csv(args[3])
+allocation_data <- read.csv(basename(args[3]))
 allocation_data <- allocation_data[!apply(is.na(allocation_data) | allocation_data == "", 1, all),]
 
 # group per Service
@@ -74,12 +74,12 @@ allocation_plot <- ggplot(allocation_data, aes(x=CurrentTime, y=CoreNumber, colo
 allocation_plot + geom_point(position=position_jitter(h=0.05, w=0.05),
              , alpha = 0.5, size = 1.5) + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Device, ncol=1)  + theme(legend.position="bottom")
 
-alllocation_plot_fn <- paste("allocation_plot_file_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
+alllocation_plot_fn <- paste("allocation_plot_file_",gsub("[a-z _ .]", "", basename(args[3])), ".png", sep="")
 ggsave(alllocation_plot_fn)
 
 # the same as above but with geom_line() instread of coint
 allocation_plot + geom_line() + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Device, ncol=1)  + theme(legend.position="bottom")
-alllocation_plot_fn <- paste("allocation_plot_line_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
+alllocation_plot_fn <- paste("allocation_plot_line_",gsub("[a-z _ .]", "", basename(args[3])), ".png", sep="")
 ggsave(alllocation_plot_fn)
 
 # relate VoI to the number of allocated cores
@@ -89,7 +89,7 @@ cdp <- ggplot(cd, aes(x=CurrentTime, y=Cores, color=Service))
 
 cdp + geom_line() + #+ guides(color = "none", fill = "none") 
 xlab("Time") + ylab("Allocated Cores") + theme_bw() + theme(text = element_text(size=10)) 
-cores_voi_mean_fn <- paste("total_cores_allocated_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
+cores_voi_mean_fn <- paste("total_cores_allocated_",gsub("[a-z _ .]", "", basename(args[3])), ".png", sep="")
 ggsave(cores_voi_mean_fn, width=15, height=8)
 
 
@@ -106,17 +106,17 @@ allocation_plot <- ggplot(allocation_data, aes(x=CurrentTime, y=CoreNumber, colo
 allocation_plot + geom_point(position=position_jitter(h=0.05, w=0.05),
             , alpha = 0.75, size = 1.5) + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Service, ncol=1) + scale_fill_discrete(guide = guide_legend()) + theme(legend.position="bottom")
 
-alllocation_plot_fn_2 <- paste("allocation_plot_service_file_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
+alllocation_plot_fn_2 <- paste("allocation_plot_service_file_",gsub("[a-z _ .]", "", basename(args[3])), ".png", sep="")
 #ggsave(alllocation_plot_fn_2, height = 5 , width = 5 * aspect_ratio)
 ggsave(alllocation_plot_fn_2)
 
 # the same as above but with geom_line instead of geom_poiny
 allocation_plot + geom_line() + xlab("Time") +  ylab("Allocated Cores") + facet_wrap(~Service, ncol=1) + scale_fill_discrete(guide = guide_legend()) + theme(legend.position="bottom")
-alllocation_plot_fn_2 <- paste("allocation_plot_service_line_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
+alllocation_plot_fn_2 <- paste("allocation_plot_service_line_",gsub("[a-z _ .]", "", basename(args[3])), ".png", sep="")
 ggsave(alllocation_plot_fn_2)
 
-utilization_data <- read.csv(args[4])
-utilization_data_fn <- paste("device_utilization_plot_",gsub("[a-z _ .]", "", args[3]), ".png", sep="")
+utilization_data <- read.csv(basename(args[4])
+utilization_data_fn <- paste("device_utilization_plot_",gsub("[a-z _ .]", "", basename(args[3])), ".png", sep="")
 utilization_plot <- ggplot(utilization_data, aes(x=CurrentTime, y=Utilization, color=Device))
 utilization_plot + geom_line()  +  ylab("Allocated Cores") +  facet_wrap(~Device, ncol=1) + theme(legend.position = "none")
 #ggsave(utilization_data_fn, height = 5 , width = 5 * aspect_ratio)

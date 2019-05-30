@@ -18,7 +18,9 @@ module Phileas
                  :service_activations,
                  :start_time,
                  :duration,
-                 :warmup_duration
+                 :warmup_duration,
+                 :mobility_enabled,
+                 :scaling_event
   end
 
   class Configuration

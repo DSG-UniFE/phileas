@@ -64,9 +64,11 @@ module Phileas
       @latency_manager = LatencyManager.new
 
       # Prototyping speed_up simulation
+      # not used at this time
       # random variable for scale generation
       # adjust this parameter
-      @serv_speedup_rv = ERV::RandomVariable.new(distribution: :gaussian, args: { mean: 0.02, sd: 0.001 })
+      #@serv_speedup_rv = ERV::RandomVariable.new(distribution: :gaussian, args: { mean: 0.02, sd: 0.001 })
+      
       #voi benchmark  file
       time = Time.now.strftime('%Y%m%d%H%M%S')
 
@@ -120,9 +122,9 @@ module Phileas
       end
 
       # schedule the generation of the first speed_up event
-      schedule_speed_up_event_generation
+      schedule_speed_up_event_generation if @configuration.scaling_event?
       # schedule users' mobility event generation
-      schedule_next_change_position_event_generation
+      schedule_next_change_position_event_generation if @configuration.mobility_enabled?
 
       current_event = 0
 
