@@ -51,20 +51,20 @@ module Phileas
         # scales resources based on the device' resource pool
         # instead of using a 0..1 scale
         allocable_resources = @resource_pool
-        puts "Device with #{@resource_pool} cores"
+        #puts "Device with #{@resource_pool} cores"
         @services.each do |x|
           unless allocable_resources === 0
-            puts "Resource requirements: #{x.resource_requirements}"
+            #puts "Resource requirements: #{x.resource_requirements}"
             service_resources_tmp = ((x.resource_requirements / @total_resources_required) * @resource_pool)
-            puts "Assigned tmp #{service_resources_tmp} allocable: #{allocable_resources}"
+            #puts "Assigned tmp #{service_resources_tmp} allocable: #{allocable_resources}"
             unless service_resources_tmp == allocable_resources
-              puts "Service is allocable"
+              #puts "Service is allocable"
               service_resources = service_resources_tmp.round % allocable_resources
             else
               service_resources = allocable_resources
             end
             allocable_resources -= service_resources
-            puts "Resources assigned: #{service_resources} "
+            #puts "Resources assigned: #{service_resources} "
             x.assign_resources(service_resources)
           else
             x.assign_resources(0.0)
@@ -76,7 +76,7 @@ module Phileas
       def reallocate_resources_with_speedup
         # scales resources based on the device's resource pool also assigning
         allocable_resources = @resource_pool
-        puts "**** Device #{self} with #{@resource_pool} cores - Running #{@services.length} services ****"
+        #puts "**** Device #{self} with #{@resource_pool} cores - Running #{@services.length} services ****"
         # update total_resources_required before performing the allocation algorithm
         rr = 0.0
         #@total_resources_required = rr
@@ -86,7 +86,7 @@ module Phileas
           log_base = x.speed_up[:base]
           log_exp = x.speed_up[:exp]
           unless allocable_resources === 0
-            puts "Resource assigned: #{x.resources_assigned}\t required_requirements: #{x.resource_requirements}\t total_required: #{@total_resources_required}"
+            #puts "Resource assigned: #{x.resources_assigned}\t required_requirements: #{x.resource_requirements}\t total_required: #{@total_resources_required}"
             # x.required_scale = 0 if ( x.resources_assigned + x.required_scale ) <= 0
             # zero check
             unless @total_resources_required == 0.0
@@ -95,7 +95,7 @@ module Phileas
               service_resources_tmp = 0.0
             end
 
-            puts "Assigned tmp #{service_resources_tmp} allocable: #{allocable_resources}"
+            #puts "Assigned tmp #{service_resources_tmp} allocable: #{allocable_resources}"
             if service_resources_tmp == 0.0
               service_resources = 0.0
             else
@@ -108,7 +108,7 @@ module Phileas
               end
             end
             allocable_resources -= service_resources.to_f
-            puts "Resources assigned: #{service_resources}"
+            #puts "Resources assigned: #{service_resources}"
             x.numerical_speed_up = service_resources ** Math::log(log_exp, log_base) - x.resources_assigned ** Math::log(log_exp, log_base)
             x.assign_resources(service_resources)
             allocated_cores +=  service_resources
@@ -118,11 +118,11 @@ module Phileas
             x.resources_assigned = 0.0
             x.numerical_speed_up = 0.0 ** Math::log(log_exp, log_base) - x.resources_assigned ** Math::log(log_exp, log_base)
           end
-          puts "**** Desired speedup #{x.numerical_speed_up} for service #{x}"
+          #puts "**** Desired speedup #{x.numerical_speed_up} for service #{x}"
         end
         # calculate resource requirements
         #resource_requirements = 0.0
-        puts "**** Allocated cores #{allocated_cores}/#{@resource_pool} for #{@services.length} services ***"
+        #puts "**** Allocated cores #{allocated_cores}/#{@resource_pool} for #{@services.length} services ***"
         raise "Error, there is an error in the allocation algorithm. Allocated #{allocated_cores} " if allocated_cores.to_f > @resource_pool.to_f
         # we probably do not need to update total_resoureces_required here
         resources_check = 0.0

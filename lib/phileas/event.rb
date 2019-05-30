@@ -11,6 +11,7 @@ module Phileas
     ET_SERVICE_ACTIVATION          =   4
     ET_SERVICE_SHUTDOWN            =   5
     ET_SERVICE_SPEEDUP             =   6
+    ET_USER_GROUP_MOVED           =   7
     ET_END_OF_SIMULATION           = 100
 
     # let the comparable mixin provide the < and > operators for us

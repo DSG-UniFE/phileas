@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require 'progress_bar'
+require 'mm'
 
 require_relative './support/sorted_array'
 require_relative './data_source'
@@ -62,10 +63,9 @@ module Phileas
       @latency_manager = LatencyManager.new
 
       # Prototyping speed_up simulation
-      # Need to adjust the probability function
-      # we need to set the time for reallocation
+      # random variable for scale generation
+      # adjust this parameter
       @serv_speedup_rv = ERV::RandomVariable.new(distribution: :gaussian, args: { mean: 0.02, sd: 0.001 })
-      #@scale_speedup_rv = ERV::RandomVariable.new(distribution: :discrete_uniform, args: { min: 0.0, max: 4.0 })
       #voi benchmark  file
       time = Time.now.strftime('%Y%m%d%H%M%S')
       @voi_benchmark = File.open("sim_voi_data#{time}.csv", 'w')
@@ -116,6 +116,8 @@ module Phileas
 
       # schedule the generation of the first speed_up event
       schedule_speed_up_event_generation
+      # schedule users' mobility event generation
+      schedule_next_change_position_event_generation
 
       current_event = 0
 
@@ -194,11 +196,12 @@ module Phileas
           # for each ET_SERVICE_SPEEDUP event select a service randomly
           selected_service = rand(@active_service_repository.find_active_services(@current_time).length)
           service = @active_service_repository.find_active_services(@current_time)[selected_service]
-          puts "About to reallocate the resources for service #{service}"
           dev_cores = service.device.resources
+          used_cores = dev_cores - service.device.available_resources
+          puts "Reallocating resources for service #{service.output_content_type}, now using: #{service.resources_assigned} Device Status: #{used_cores} / #{dev_cores}"
           avg_cores = (dev_cores + service.device.available_resources) / 2.0
-          puts "Available cores on device: #{service.device.available_resources} / #{dev_cores}"
-          puts "Service is using #{service.resources_assigned} cores"
+          #puts "Available cores on device: #{service.device.available_resources} / #{dev_cores}\n "
+          #puts "Service is using #{service.resources_assigned} cores"
           log_base = service.speed_up[:base]
           log_exp = service.speed_up[:exp]
           # simulate step by step speed_up or scale_down
@@ -226,6 +229,12 @@ module Phileas
           service.required_scale = scale
           # reallocate reources here
           service.device.resource_assignment_policy.reallocate_resources_with_speedup
+          # update user interest according to speed_up (only for user_group nearby)
+          @user_group_repository.each do |_, ug|
+            if ug.nearby?(service.device.location)
+               ug.update_interest(service.output_content_type, scale)
+            end
+          end
           # collect the data regarding device_utilization
           @device_repository.each do |dev|
             unless dev[1].type == :cloud
@@ -238,6 +247,11 @@ module Phileas
           end
           schedule_speed_up_event_generation
 
+        when Event::ET_USER_GROUP_MOVED
+          @user_group_repository.each do |_,ug|
+            ug.move_users
+          end
+          schedule_next_change_position_event_generation
 
         when Event::ET_END_OF_SIMULATION
           $stderr.puts "#{e.time}: end simulation"
@@ -252,6 +266,10 @@ module Phileas
       @speed_up_event_benchmark.close
       @state = :not_running
       @event_queue = nil
+      #save also position data
+      @user_group_repository.each do |id,ug|
+        Mm::Helper.coords_to_kml("user_group_#{id}.kml", ug.trajectory)
+      end
       # sleep before drawing the graphs
       puts "*** #{self.class.name} About to generate plots.... ***"
       puts "Rscript --vanilla bin/generate_plots.r #{@voi_benchmark.path} #{@services_benchmark.path} #{@resources_allocation.path} #{@device_utilization.path}"
@@ -311,6 +329,14 @@ module Phileas
         end
       end
 
+      def schedule_next_change_position_event_generation()
+        if @current_time <= (@configuration.start_time + @configuration.duration)
+          time_to_next_generation = @configuration.duration / 100.0
+          puts "ChangePosition: Current time: #{@current_time} \t Time to next generation  #{time_to_next_generation}"
+          new_event(Event::ET_USER_GROUP_MOVED, [], @current_time + time_to_next_generation)
+        end
+      end
+
       def dispatch_crio_message(msg)
         @user_group_repository.each do |ug_id,ug|
           ug.interests.each do |interest|
@@ -353,9 +379,6 @@ module Phileas
         end
         resources_in_use / (device_repository.length.to_f * 100.0)
       end
-      #def resources_in_use_at_the_edge(device_repository)
-      #  0.0
-      #end
 
 
       def update_progress_bar
