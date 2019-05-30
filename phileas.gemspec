@@ -37,6 +37,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "erv", ">= 0.3.4"
   spec.add_dependency "geo_coord", "~> 0.1.0"
   spec.add_dependency "progress_bar"
+  spec.add_dependency "ruby_kml"
 
   spec.add_development_dependency "bundler", "~> 2.0"
   spec.add_development_dependency "rake", "~> 10.0"

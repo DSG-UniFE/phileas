@@ -15,6 +15,7 @@ require_relative './user_group'
 
 module Phileas
   class Simulator
+    OUTPUT_SIM_FOLDER = "simulation_results"
     def initialize(configuration:)
       @state = :not_running
       @progress_bar = ProgressBar.new(100, :bar, :percentage, :elapsed, :eta)
@@ -68,16 +69,20 @@ module Phileas
       @serv_speedup_rv = ERV::RandomVariable.new(distribution: :gaussian, args: { mean: 0.02, sd: 0.001 })
       #voi benchmark  file
       time = Time.now.strftime('%Y%m%d%H%M%S')
-      @voi_benchmark = File.open("sim_voi_data#{time}.csv", 'w')
+
+      # benchmarking file, create simulation directory
+      Dir.mkdir(OUTPUT_SIM_FOLDER) unless Dir.exist?(OUTPUT_SIM_FOLDER)
+
+      @voi_benchmark = File.open("#{OUTPUT_SIM_FOLDER}/sim_voi_data#{time}.csv", 'w')
       @voi_benchmark  << "CurrentTime,InputVoI,OriginatingTime,Users,OutputVoI,ContentType,ActiveServices,Device\n"
       #services benchmakr file (aggregated/dropped/ messages) resources' status
-      @services_benchmark = File.open("sim_services_data#{time}.csv", 'w')
+      @services_benchmark = File.open("#{OUTPUT_SIM_FOLDER}/sim_services_data#{time}.csv", 'w')
       @services_benchmark << "CurrentTime,MsgType,MsgContentType,Dropped,ResourcesRequirements,AvailableResources,ActiveServices,EdgeResourcesUsed,Device\n"
-      @resources_allocation = File.open("resources_allocation_data#{time}.csv", 'w')
+      @resources_allocation = File.open("#{OUTPUT_SIM_FOLDER}/resources_allocation_data#{time}.csv", 'w')
       @resources_allocation << "CurrentTime,Service,Device,CoreNumber,Scale,DeviceResources,DesiredSpeedUp\n"
-      @device_utilization = File.open("device_utilization#{time}.csv", 'w')
+      @device_utilization = File.open("#{OUTPUT_SIM_FOLDER}/device_utilization#{time}.csv", 'w')
       @device_utilization << "CurrentTime,Device,Utilization,DeviceResources\n"
-      @speed_up_event_benchmark = File.open("speed_up_event_benchmark#{time}.csv", 'w')
+      @speed_up_event_benchmark = File.open("#{OUTPUT_SIM_FOLDER}/speed_up_event_benchmark#{time}.csv", 'w')
       @speed_up_event_benchmark << "CurrentTime\n"
     end
 
@@ -268,7 +273,7 @@ module Phileas
       @event_queue = nil
       #save also position data
       @user_group_repository.each do |id,ug|
-        Mm::Helper.coords_to_kml("user_group_#{id}.kml", ug.trajectory)
+        Mm::Helper.coords_to_kml("#{OUTPUT_SIM_FOLDER}/user_group_#{id}.kml", ug.trajectory)
       end
       # sleep before drawing the graphs
       puts "*** #{self.class.name} About to generate plots.... ***"
