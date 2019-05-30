@@ -115,7 +115,7 @@ allocation_plot + geom_line() + xlab("Time") +  ylab("Allocated Cores") + facet_
 alllocation_plot_fn_2 <- paste("allocation_plot_service_line_",gsub("[a-z _ .]", "", basename(args[3])), ".png", sep="")
 ggsave(alllocation_plot_fn_2)
 
-utilization_data <- read.csv(basename(args[4])
+utilization_data <- read.csv(basename(args[4]))
 utilization_data_fn <- paste("device_utilization_plot_",gsub("[a-z _ .]", "", basename(args[3])), ".png", sep="")
 utilization_plot <- ggplot(utilization_data, aes(x=CurrentTime, y=Utilization, color=Device))
 utilization_plot + geom_line()  +  ylab("Allocated Cores") +  facet_wrap(~Device, ncol=1) + theme(legend.position = "none")
