@@ -47,6 +47,16 @@ module Phileas
       users
     end
 
+    def users_interested(content_type, location)
+      users = 0.to_f
+      @interests.each do |interest|
+        if interest[:content_type] == content_type && nearby?(location)
+          users +=  interest[:share] * users_at(nil) 
+        end
+      end
+      users
+    end
+
     # add a monkey path to update user share
     def update_interest(content_type, multiply_factor)
       @interests.each do |interest|

@@ -175,7 +175,10 @@ module Phileas
                                          location: user_group.location, debug: false)
           #num_users = user_group.users_interested(content_type: msg.content_type,
           #                                        time: @current_time)
-          num_users = user_group.users_interested(content_type: msg.content_type)
+          # here we should count only the users nearby
+          #num_users = user_group.users_interested(content_type: msg.content_type)
+          num_users = user_group.users_interested(msg.content_type, user_group.location)
+
           total_voi = msg_voi * num_users
           #puts "CRIO message starting_voi: #{msg.starting_voi} remaing_voi: #{msg_voi}"
           # NOTE: for now the output is a list of VoI values measured at the
