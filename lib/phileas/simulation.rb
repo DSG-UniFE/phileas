@@ -7,6 +7,7 @@ require_relative './data_source'
 require_relative './device'
 require_relative './event'
 require_relative './latency_manager'
+require_relative './propagation_loss'
 require_relative './location'
 require_relative './service'
 require_relative './service_repository'
@@ -63,12 +64,18 @@ module Phileas
       # setup latency manager
       @latency_manager = LatencyManager.new
 
+      # setup propagation_loss manager with default parameters
+      @propagation_loss = LogDistancePropagationLoss.new
+      @tx_power_dbm = 20.0
+      @energy_det_th = -96.0 #dbm of wifi_channgel
+
       # Prototyping speed_up simulation
       # not used at this time
       # random variable for scale generation
       # adjust this parameter
       @serv_speedup_rv = ERV::RandomVariable.new(distribution: :gaussian, args: { mean: 0.02, sd: 0.001 })
       
+
       #voi benchmark  file
       time = Time.now.strftime('%Y%m%d%H%M%S')
 
@@ -304,7 +311,8 @@ module Phileas
           loc1 = msg.originating_location
           loc2 = serv.device_location
           transmission_time = @latency_manager.calculate_trasmission_time_between(loc1, loc2)
-          unless transmission_time.nil?
+          rx_power = @propagation_loss.calc_rx_power(@tx_power_dbm, loc1.coords, loc2.coords)
+          unless transmission_time.nil? || rx_power < @energy_det_th
             new_event(Event::ET_RAW_DATA_MESSAGE_ARRIVAL, [ msg, serv ], @current_time + transmission_time)
           else
             #$stderr.puts "transmission is unfeasible"
@@ -318,7 +326,8 @@ module Phileas
           loc1 = msg.originating_location
           loc2 = serv.device_location
           transmission_time = @latency_manager.calculate_trasmission_time_between(loc1, loc2)
-          unless transmission_time.nil?
+          rx_power = @propagation_loss.calc_rx_power(@tx_power_dbm, loc1.coords, loc2.coords)
+          unless transmission_time.nil? || rx_power < @energy_det_th
             new_event(Event::ET_IO_MESSAGE_ARRIVAL, [ msg, serv ], @current_time + transmission_time)
           else
             #$stderr.puts "transmission is unfeasible"
@@ -356,7 +365,8 @@ module Phileas
               # is the difference between
               loc2 = ug.location
               transmission_time = @latency_manager.calculate_trasmission_time_between(loc1, loc2)
-              unless transmission_time.nil?
+              rx_power = @propagation_loss.calc_rx_power(@tx_power_dbm, loc1.coords, loc2.coords)
+              unless transmission_time.nil? || rx_power < @energy_det_th
                 new_event(Event::ET_CRIO_MESSAGE_ARRIVAL, [ msg, ug ], @current_time + transmission_time)
               else
                 #$stderr.puts "transmission is unfeasible"

@@ -20,7 +20,8 @@ module Phileas
                  :duration,
                  :warmup_duration,
                  :mobility_enabled,
-                 :scaling_event
+                 :scaling_event,
+                 :propagation_loss_enabled
   end
 
   class Configuration
