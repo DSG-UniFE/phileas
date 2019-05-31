@@ -26,7 +26,7 @@ module Phileas
         end
     end
 
-    class LogDistancePropagationLoss
+    class LogDistancePropagationLoss < PropagationLoss
         attr_reader :exponent, :reference_distance, :path_loss_reference 
         # from ns3
         # the reference loss at reference distance (dB). (Default is Friis at 1m with 5.15 GHz)
@@ -52,6 +52,9 @@ module Phileas
             return txPowerDbm + rxc
         end
 
+    end
+
+    class FriisPropagationLossModel
     end
 
     class TestHelper
