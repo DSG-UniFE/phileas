@@ -65,7 +65,12 @@ module Phileas
       @latency_manager = LatencyManager.new
 
       # setup propagation_loss manager with default parameters
-      @propagation_loss = LogDistancePropagationLoss.new
+      if @configuration.propagation_loss_enabled
+        @propagation_loss = LogDistancePropagationLoss.new
+      else
+        @propagation_loss = nil
+      end
+
       @tx_power_dbm = 20.0
       @energy_det_th = -96.0 #dbm of wifi_channgel
 
@@ -311,9 +316,10 @@ module Phileas
           loc1 = msg.originating_location
           loc2 = serv.device_location
           transmission_time = @latency_manager.calculate_trasmission_time_between(loc1, loc2)
-          rx_power = @propagation_loss.calc_rx_power(@tx_power_dbm, loc1.coords, loc2.coords)
+          rx_power = @configuration.propagation_loss_enabled ? @propagation_loss.calc_rx_power(@tx_power_dbm, loc1.coords, loc2.coords)
+             : Float::INFINITY  
           unless transmission_time.nil? || rx_power < @energy_det_th
-            new_event(Event::ET_RAW_DATA_MESSAGE_ARRIVAL, [ msg, serv ], @current_time + transmission_time)
+          new_event(Event::ET_RAW_DATA_MESSAGE_ARRIVAL, [ msg, serv ], @current_time + transmission_time)
           else
             #$stderr.puts "transmission is unfeasible"
           end
@@ -326,7 +332,8 @@ module Phileas
           loc1 = msg.originating_location
           loc2 = serv.device_location
           transmission_time = @latency_manager.calculate_trasmission_time_between(loc1, loc2)
-          rx_power = @propagation_loss.calc_rx_power(@tx_power_dbm, loc1.coords, loc2.coords)
+          rx_power = @configuration.propagation_loss_enabled ? @propagation_loss.calc_rx_power(@tx_power_dbm, loc1.coords, loc2.coords)
+             : Float::INFINITY  
           unless transmission_time.nil? || rx_power < @energy_det_th
             new_event(Event::ET_IO_MESSAGE_ARRIVAL, [ msg, serv ], @current_time + transmission_time)
           else
@@ -365,7 +372,8 @@ module Phileas
               # is the difference between
               loc2 = ug.location
               transmission_time = @latency_manager.calculate_trasmission_time_between(loc1, loc2)
-              rx_power = @propagation_loss.calc_rx_power(@tx_power_dbm, loc1.coords, loc2.coords)
+              rx_power = @configuration.propagation_loss_enabled ? @propagation_loss.calc_rx_power(@tx_power_dbm, loc1.coords, loc2.coords)
+              : Float::INFINITY  
               unless transmission_time.nil? || rx_power < @energy_det_th
                 new_event(Event::ET_CRIO_MESSAGE_ARRIVAL, [ msg, ug ], @current_time + transmission_time)
               else
