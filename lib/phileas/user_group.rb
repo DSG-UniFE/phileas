@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require 'erv'
-require 'mm'
+
+require_relative './random_walk'
 
 module Phileas
 
@@ -16,7 +17,8 @@ module Phileas
       @interests = interests
       @location  = location
       @user_dist = ERV::RandomVariable.new(user_dist)
-      @trajectory = Mm::RandomWalk.latitude_longitude(CHANGE_OF_POSITION, location.coords)
+      #@trajectory = RandomWalk.latitude_longitude(CHANGE_OF_POSITION, location.coords)
+      @trajectory = RandomWalk.lat_lon_direction(CHANGE_OF_POSITION, location.coords)
       @trajectory_count = 1
     end
 

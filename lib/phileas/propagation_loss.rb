@@ -1,6 +1,7 @@
 require 'geo/coord'
-require 'mm'
+
 require_relative './location'
+require_relative './random_walk'
 
 module Phileas
 
@@ -133,40 +134,40 @@ module Phileas
 
     end
 
-    class TestHelper
-        Energy_detenction_th = -96.0 #dbm of wifi_channgel
-        OUTPUT_SIM_FOLDER = "simulation_results"
-        attr_reader :location
-        # tx_power in dbm
-        def initialize(location = nil, tx_power = 20.0)
-            @location = Geo::Coord.new(44.833416, 11.598771)
-            @tx_power = tx_power
-        end
+  class TestHelper
+    Energy_detenction_th = -96.0 #dbm of wifi_channgel
+    OUTPUT_SIM_FOLDER = "simulation_results"
+    attr_reader :location
+    # tx_power in dbm
+    def initialize(location = nil, tx_power = 20.0)
+      @location = Geo::Coord.new(44.833416, 11.598771)
+      @tx_power = tx_power
+    end
 
-        def test_log_model
-            locations = Mm::RandomWalk.latitude_longitude(10000, @location)
-            ld_pl = LogDistancePropagationLoss.new
-            (locations.length() -1).times do |i|
-                rxp = ld_pl.calc_rx_power(@tx_power, @location, locations[i])
-                if rxp < Energy_detenction_th
-                    $stderr.puts "Trasmission is unfeasible rx_power is #{rxp}"
-                    Mm::Helper.coords_to_kml("#{OUTPUT_SIM_FOLDER}/test_log_propagation_loss.kml", locations[0, i])
-                    break
-                end
-            end
+    def test_log_model
+      locations = RandomWalk.latitude_longitude(10000, @location)
+      ld_pl = LogDistancePropagationLoss.new
+      (locations.length() -1).times do |i|
+        rxp = ld_pl.calc_rx_power(@tx_power, @location, locations[i])
+        if rxp < Energy_detenction_th
+          $stderr.puts "Trasmission is unfeasible rx_power is #{rxp}"
+          Mm::Helper.coords_to_kml("#{OUTPUT_SIM_FOLDER}/test_log_propagation_loss.kml", locations[0, i])
+          break
         end
+      end
+    end
 
-        def test_friis_model
-            locations = Mm::RandomWalk.latitude_longitude(10000, @location)
-            f_pl = FriisPropagationLossModel.new
-            (locations.length() -1).times do |i|
-                rxp = f_pl.calc_rx_power(@tx_power, @location, locations[i])
-                if rxp < Energy_detenction_th
-                    $stderr.puts "Trasmission is unfeasible rx_power is #{rxp}"
-                    Mm::Helper.coords_to_kml("#{OUTPUT_SIM_FOLDER}/test_friss_propagation_loss.kml", locations[0, i])
-                    break
-                end
-            end
+      def test_friis_model
+        locations = RandomWalk.latitude_longitude(10000, @location)
+        f_pl = FriisPropagationLossModel.new
+        (locations.length() -1).times do |i|
+          rxp = f_pl.calc_rx_power(@tx_power, @location, locations[i])
+          if rxp < Energy_detenction_th
+            $stderr.puts "Trasmission is unfeasible rx_power is #{rxp}"
+            Mm::Helper.coords_to_kml("#{OUTPUT_SIM_FOLDER}/test_friss_propagation_loss.kml", locations[0, i])
+            break
+          end
         end
     end
+  end
 end

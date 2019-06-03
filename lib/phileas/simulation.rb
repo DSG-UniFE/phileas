@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 require 'progress_bar'
-require 'mm'
 
 require_relative './support/sorted_array'
 require_relative './data_source'
@@ -79,7 +78,6 @@ module Phileas
       # random variable for scale generation
       # adjust this parameter
       @serv_speedup_rv = ERV::RandomVariable.new(distribution: :gaussian, args: { mean: 0.02, sd: 0.001 })
-      
 
       #voi benchmark  file
       time = Time.now.strftime('%Y%m%d%H%M%S')
