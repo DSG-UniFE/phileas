@@ -18,7 +18,7 @@ module Phileas
       @location  = location
       @user_dist = ERV::RandomVariable.new(user_dist)
       #@trajectory = RandomWalk.latitude_longitude(CHANGE_OF_POSITION, location.coords)
-      @trajectory = RandomWalk.lat_lon_direction(CHANGE_OF_POSITION, location.coords)
+      @trajectory = RandomWalk.lat_lon_direction(CHANGE_OF_POSITION, location.coords, 1000.0, 100.0, 35.0)
       @trajectory_count = 1
     end
 
