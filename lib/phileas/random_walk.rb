@@ -80,7 +80,7 @@ module Phileas
 
 
   # azimuth is expressed in degrees
-  def self.lat_lon_direction(array_length, starting_location, mean_distance = 50.0, sd_distance = 12.5)
+  def self.lat_lon_direction(array_length, starting_location, max_distance=nil, mean_distance = 50.0, sd_distance = 12.5)
     starting_location = starting_location
     erv_distance = ERV::RandomVariable.new(distribution: :gaussian, 
       args: { mean: mean_distance, sd: sd_distance })
@@ -89,29 +89,6 @@ module Phileas
     positions = []
     current_location = starting_location
     # select a different angle at each iteration. Do not conside
-    (array_length - 1).times do |i|
-      direction = Random.rand(0..2*Math::PI)
-      distance = erv_distance.sample
-      next_position = current_location.endpoint(distance, Helper::to_degree(direction))
-      positions << next_position
-      current_location = next_position
-      end
-    return positions
-  end
-
-
-
-  # azimuth is expressed in degrees
-  def self.lat_lon_bound(array_length, starting_location, max_distance = nil, mean_distance = 50.0, sd_distance = 12.5)
-    starting_location = starting_location
-    erv_distance = ERV::RandomVariable.new(distribution: :gaussian, 
-      args: { mean: mean_distance, sd: sd_distance })
-    lats = [starting_location.lat]
-    lons = [starting_location.lon]
-    positions = []
-    current_location = starting_location
-    # select a different angle at each iteration. Do not conside
-    puts "Max distance: #{max_distance}"
     (array_length - 1).times do |i|
       while true do
         direction = Random.rand(0..2*Math::PI)
@@ -122,7 +99,6 @@ module Phileas
           current_location = next_position
           break
         end
-        $stderr.puts "RandomWalk: Out of bound"
       end
       end
     return positions
@@ -185,7 +161,7 @@ end
 
     def self.test_helper_3()
       g = Geo::Coord.new(50.004444, 36.231389)
-      coords = RandomWalk.lat_lon_bound(10000, g, 250.0)
+      coords = RandomWalk.lat_lon_direction(1000, g, 250.0)
       Helper.coords_to_kml("test_rw_bound.kml", coords)
     end
 
