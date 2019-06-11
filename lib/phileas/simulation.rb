@@ -70,7 +70,7 @@ module Phileas
         @propagation_loss = nil
       end
 
-      @tx_power_dbm = 20.0
+      @tx_power_dbm = 32.0
       @energy_det_th = -96.0 #dbm of wifi_channgel
 
       # Prototyping speed_up simulation
@@ -86,7 +86,7 @@ module Phileas
       Dir.mkdir(OUTPUT_SIM_FOLDER) unless Dir.exist?(OUTPUT_SIM_FOLDER)
 
       @voi_benchmark = File.open("#{OUTPUT_SIM_FOLDER}/sim_voi_data#{time}.csv", 'w')
-      @voi_benchmark  << "CurrentTime,InputVoI,OriginatingTime,Users,OutputVoI,ContentType,ActiveServices,Device\n"
+      @voi_benchmark  << "CurrentTime,InputVoI,OriginatingTime,Users,OutputVoI,ContentType,ActiveServices,Device,Distance\n"
       #services benchmakr file (aggregated/dropped/ messages) resources' status
       @services_benchmark = File.open("#{OUTPUT_SIM_FOLDER}/sim_services_data#{time}.csv", 'w')
       @services_benchmark << "CurrentTime,MsgType,MsgContentType,Dropped,ResourcesRequirements,AvailableResources,ActiveServices,EdgeResourcesUsed,Device\n"
@@ -191,11 +191,12 @@ module Phileas
 
           total_voi = msg_voi * num_users
           #puts "CRIO message starting_voi: #{msg.starting_voi} remaing_voi: #{msg_voi}"
+          distance = msg.originating_location.distance(user_group.location)
           # NOTE: for now the output is a list of VoI values measured at the
           # corresponding time - the idea is to facilitate post-processing via
           # CSV parsing
           #puts "#@current_time,#{msg.originating_time},#{msg.starting_voi},#{num_users},#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length}"
-          @voi_benchmark << "#@current_time,#{msg.starting_voi},#{msg.originating_time},#{num_users},#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length},#{msg.device}\n"
+          @voi_benchmark << "#@current_time,#{msg.starting_voi},#{msg.originating_time},#{num_users},#{total_voi},#{msg.content_type},#{@active_service_repository.find_active_services(@current_time).length},#{msg.device},#{distance}\n"
 
 
         when Event::ET_SERVICE_ACTIVATION
@@ -288,7 +289,7 @@ module Phileas
       @event_queue = nil
       #save also position data
       @user_group_repository.each do |id,ug|
-        Mm::Helper.coords_to_kml("#{OUTPUT_SIM_FOLDER}/user_group_#{id}.kml", ug.trajectory)
+        Helper.coords_to_kml("#{OUTPUT_SIM_FOLDER}/user_group_#{id}.kml", ug.trajectory)
       end
       # sleep before drawing the graphs
       puts "*** #{self.class.name} About to generate plots.... ***"
@@ -317,7 +318,7 @@ module Phileas
           rx_power = @configuration.propagation_loss_enabled ? @propagation_loss.calc_rx_power(@tx_power_dbm, loc1.coords, loc2.coords)
              : Float::INFINITY  
           unless transmission_time.nil? || rx_power < @energy_det_th
-          new_event(Event::ET_RAW_DATA_MESSAGE_ARRIVAL, [ msg, serv ], @current_time + transmission_time)
+            new_event(Event::ET_RAW_DATA_MESSAGE_ARRIVAL, [ msg, serv ], @current_time + transmission_time)
           else
             #$stderr.puts "transmission is unfeasible"
           end
@@ -374,8 +375,9 @@ module Phileas
               : Float::INFINITY  
               unless transmission_time.nil? || rx_power < @energy_det_th
                 new_event(Event::ET_CRIO_MESSAGE_ARRIVAL, [ msg, ug ], @current_time + transmission_time)
+                #$stdout.puts "CRIO transmission is feasible, power at rx #{rx_power}, tx-rx distance: #{loc1.distance(loc2)}"
               else
-                #$stderr.puts "transmission is unfeasible"
+               #$stderr.puts "CRIO transmission is unfeasible, device at, #{loc1.coords.lat} #{loc1.coords.lon}, power at rx #{rx_power}, tx-rx distance: #{loc1.distance(loc2)}"
               end
             end
           end

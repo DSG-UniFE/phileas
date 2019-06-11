@@ -42,6 +42,11 @@ voi_means <- paste("voi_means_",gsub("[a-z _ .]", "", filename), ".png", sep="")
 #ggsave(voi_means, height = 5 , width = 5 * aspect_ratio)
 ggsave(voi_means)
 
+ggplot(voi_data, aes(OutputVoI, color=ContentType, fill=ContentType)) + geom_density(alpha = 0.1) + facet_wrap(~ContentType) +
+theme(legend.position="none")
+voi_distribution <-  paste("voi_distribution_",gsub("[a-z _ .]", "", filename), ".png", sep="")
+ggsave(voi_distribution)
+
 # save plot with all services on the same graph
 ggsave(voict_fn_all, height = 5 , width = 5 * aspect_ratio)
 
@@ -115,6 +120,12 @@ allocation_plot + geom_line() + xlab("Time") +  ylab("Allocated Cores") + facet_
 alllocation_plot_fn_2 <- paste("allocation_plot_service_line_",gsub("[a-z _ .]", "", basename(args[3])), ".png", sep="")
 ggsave(alllocation_plot_fn_2)
 
+
+ggplot(allocation_data, aes(CoreNumber, fill=Service, position="stack")) + geom_density() + facet_wrap(~Service) + theme(legend.position="none")
+allocated_cores_distribution <- paste("allocated_core_distribution_",gsub("[a-z _ .]", "", basename(args[3])), ".png", sep="")
+ggsave(allocated_cores_distribution)
+
+
 utilization_data <- read.csv(basename(args[4]))
 utilization_data_fn <- paste("device_utilization_plot_",gsub("[a-z _ .]", "", basename(args[3])), ".png", sep="")
 utilization_plot <- ggplot(utilization_data, aes(x=CurrentTime, y=Utilization, color=Device))
@@ -134,6 +145,12 @@ xlab("Services") + ylab("Users") + theme_bw() + theme(text = element_text(size=1
 users_mean <- paste("users_mean_",gsub("[a-z _ .]", "", filename), ".png", sep="")
 
 ggsave(users_mean)
+
+
+ ggplot(voi_data, aes(Users, color=ContentType, fill=ContentType)) + geom_density(alpha = 0.1) + facet_wrap(~ContentType) + theme(legend.position="none")
+ users_distribution <- paste("users_distribution_",gsub("[a-z _ .]", "", filename), ".png", sep="")
+ ggsave(users_distribution)
+
 
 # Users during the time
 

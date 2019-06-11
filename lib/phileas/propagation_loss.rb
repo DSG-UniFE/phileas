@@ -57,7 +57,7 @@ module Phileas
 
         # for more details
         # https://en.wikipedia.org/wiki/Log-distance_path_loss_model
-        def initialize(exponent =3.0, reference_distance = 1.0,
+        def initialize(exponent = 3.0, reference_distance = 1.0,
             path_loss_reference = 46.6777)
              @exponent = exponent
              @reference_distance = reference_distance
