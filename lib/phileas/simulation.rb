@@ -239,18 +239,14 @@ module Phileas
           else
             scale = -speed_up.round
           end
-          # the scaling should be reflected on the number of processed messages 
-          # (as effect of the linear dropping policy)
-          # we should also change the VoI multiplier?
-
           # Simulate an increase or a decrease of required resources
           puts "Scale: #{scale} for #{service.output_content_type} on device #{service.device}"
           service.resource_requirements += scale
           service.resource_requirements = 0.0 if service.resource_requirements < 0.0
           service.required_scale = scale
           # reallocate reources here
-          service.device.resource_assignment_policy.reallocate_resources_with_speedup
-          # update user interest according to speed_up (only for user_group nearby)
+          service.device.resource_assignment_policy.reallocate_res_greedy
+          #update user interest according to speed_up (only for user_group nearby)
           @user_group_repository.each do |_, ug|
             if ug.nearby?(service.device.location)
                ug.update_interest(service.output_content_type, scale)

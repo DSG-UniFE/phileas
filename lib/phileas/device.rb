@@ -131,7 +131,50 @@ module Phileas
           puts "#{x.output_content_type} is using #{x.resources_assigned}/#{@resource_pool}"
         end
         puts "**** End Allocated cores ***"
+    end
+
+  def reallocate_res_greedy
+    allocable_resources = @resource_pool
+    allocated_cores = 0.0
+    allocation_map = []
+    @services.each do |x|
+      unless allocable_resources === 0
+        #puts "Requirements #{x.resource_requirements.to_f } for Service: #{x.output_content_type}"
+        service_resources_tmp = ( (x.resource_requirements.to_f / @total_resources_required.to_f) * @resource_pool).round
+        if service_resources_tmp > allocable_resources 
+          service_resources = allocable_resources.round
+        else
+          service_resources = service_resources_tmp.round
+        end
+        #puts "About to assign #{service_resources} for Service: #{x.output_content_type}"
+        allocable_resources -= service_resources.round
+        x.assign_resources(service_resources)
+        allocated_cores +=  service_resources
+        x.resources_assigned = service_resources.to_f
+        allocation_map << service_resources
       end
+    end
+    # increment randomly resource assigned to the minimum services
+    min_index = allocation_map.each_with_index.min 
+    #puts "Allocation_map #{allocation_map} Still to allocate #{allocable_resources} min_index: #{min_index}"
+    while allocable_resources.round > 0.0 do 
+      service_index = min_index.sample
+      s_assigned = @services[service_index].resources_assigned + 1.0
+      @services[service_index].assign_resources(s_assigned)
+      @services[service_index].resources_assigned = s_assigned 
+      allocable_resources -= 1
+      allocated_cores += 1
+    end
+    puts "**** Allocated cores #{allocated_cores}/#{@resource_pool} for #{@services.length} services ***"
+    raise "Error! Allocated #{allocated_cores}" if allocated_cores.to_f > @resource_pool.to_f
+    resources_check = 0.0
+    @services.each do |x|
+      resources_check += x.resources_assigned
+      puts "#{x.output_content_type} is using #{x.resources_assigned}/#{@resource_pool}"
+    end
+    @total_resources_required = @services.inject(0) {|sum, x| sum += x.resources_assigned}
+    puts "**** End Allocated cores total_resource_required is #{@total_resources_required} ***"
+  end
   end
 
   class EdgeDevice
