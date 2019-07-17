@@ -4,6 +4,7 @@
 module Phileas
 
   class AggregationProcessingPolicy
+    #read the dropping_rate for service
     def initialize(aggregation_window_size_dist:, aggregated_message_size_dist:, voi_multiplier:,
        resource_requirements:, device:)
       @aggregation_window_size_dist = ERV::RandomVariable.new(aggregation_window_size_dist)
@@ -18,6 +19,11 @@ module Phileas
       #is this a bug?
       @resources_assigned = resource_requirements
       @device = device
+      # need to keep historical data
+      # a percentage of dropped packets in the last
+      # time window
+      @processed_messages = 0
+      @dropped_messages = 0
     end
 
     def assign_resources(quantity)
@@ -31,14 +37,16 @@ module Phileas
       # resources assigined to this service
       threshold = @resources_assigned * value
       if (threshold < 1.0)
-        return if rand > threshold
+        if rand > threshold
+          @dropped_messages += 1
+          return
+        end
       end
-
       # check whether to trigger aggregation
       if @messages_to_next_aggregation == 0
         #skip if no records
         raise "No VoI information recorded!" if @recorded_vois.empty?
-
+        @processed_messages += 1
         # calculate average voi
         total_voi = @recorded_vois.inject(0.0) {|acc,el| acc += el }
         average_voi = total_voi / @recorded_vois.size.to_f
