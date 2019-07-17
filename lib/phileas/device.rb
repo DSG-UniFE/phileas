@@ -13,6 +13,10 @@ module Phileas
       @resource_pool = resources
       @total_resources_required = NO_RESOURCES
       @services = []
+      # need to keep historical data
+      # a percentage of dropped packets in the last
+      # time window
+      @dropping_rate = 0.0
     end
 
     # TODO: CHECK IF WE NEED TO KEEP TRACK OF CURRENT TIME HERE
