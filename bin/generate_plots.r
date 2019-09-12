@@ -13,6 +13,11 @@ setwd("simulation_results")
 filename <- basename(args[1])
 voi_data <- read.csv(filename)
 voi_data$nr <- as.numeric(row.names(voi_data))
+
+#end of simulation
+simulation_end <- voi_data$CurrentTime[1]  + (3600 * 24)
+
+
 vp <- ggplot(voi_data, aes(x=nr, y=OutputVoI, color=ContentType))
 #vp + geom_smooth() + facet_wrap(~ContentType, nrow=4) + xlab("Time") +
 #        ylab("VoI") + theme_bw() + theme(legend.position="none", text = element_text(size=15))
@@ -26,7 +31,13 @@ height <- 7
 vp + geom_smooth() + xlab("Time") #+ geom_smooth(data = voi_data, aes(x=nr, y=OutputVoI, color=ActiveServices)) +
         ylab("VoI") + theme_bw() + theme(text = element_text(size=15))
 voict_fn_all <- paste("voi_ct_all_",gsub("[a-z _ .]", "", filename), ".png", sep="")
+ggsave(voict_fn_all)
 
+total_voi <- ggplot(voi_data, aes(x=CurrentTime, y=OutputVoI))
+total_voi + geom_smooth()  + xlab("Simulation Time") + ylab("Total VoI") + xlim(NA, simulation_end)
+vtotal <- paste("total_voi_",gsub("[a-z _ .]", "", filename), ".png", sep="")
+
+ggsave(vtotal)
 
 # we also need to plot the mean(VoI) for each service
 

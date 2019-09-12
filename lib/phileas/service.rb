@@ -30,6 +30,11 @@ module Phileas
       @resources_assigned = quantity
     end
 
+    def dropping_rate
+      dropping_rate = @dropped_messages / (@processed_messages + @dropped_messages).to_f
+      puts "Dropping rate #{dropping_rate}"
+    end
+
     def process_message_with_voi(value)
       # reject messages if resources are not sufficient
       # for the moment we implement a linear message drop policy
@@ -66,6 +71,7 @@ module Phileas
         return nil
       end
     end
+
   end
 
   class Service
@@ -75,6 +81,8 @@ module Phileas
     def_delegator :@device, :location, :device_location
     # called by device
     def_delegator :@processing_policy, :assign_resources
+    # called by device when reallocating
+    def_delegator :@processing_policy, :dropping_rate
 
     # Use resource_requirement to scale up or down the allocated cores on the device
     attr_accessor :resource_requirements, :required_scale, :resources_assigned, :numerical_speed_up
@@ -141,5 +149,4 @@ module Phileas
       serv
     end
   end
-
 end

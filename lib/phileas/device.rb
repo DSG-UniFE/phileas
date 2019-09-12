@@ -138,6 +138,7 @@ module Phileas
     allocated_cores = 0.0
     allocation_map = []
     @services.each do |x|
+      puts "Dropping rate for #{x.output_content_type} is #{x.dropping_rate}"
       unless allocable_resources === 0
         #puts "Requirements #{x.resource_requirements.to_f } for Service: #{x.output_content_type}"
         service_resources_tmp = ( (x.resource_requirements.to_f / @total_resources_required.to_f) * @resource_pool).round

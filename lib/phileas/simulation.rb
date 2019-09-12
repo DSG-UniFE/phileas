@@ -217,6 +217,7 @@ module Phileas
           # for each ET_SERVICE_SPEEDUP event select a service randomly
           selected_service = rand(@active_service_repository.find_active_services(@current_time).length)
           service = @active_service_repository.find_active_services(@current_time)[selected_service]
+          puts "Service #{service} #{service.dropping_rate}"
           dev_cores = service.device.resources
           used_cores = dev_cores - service.device.available_resources
           puts "Reallocating resources for service #{service.output_content_type}, now using: #{service.resources_assigned} Device Status: #{used_cores} / #{dev_cores}"
@@ -233,6 +234,13 @@ module Phileas
           # need to reallocate the resource requirements only for that service
           # here we simulate an increased or a decreas interest in the service
           #calculate the numerical speed_up
+          #puts "Dropping rate for selected service #{service} is #{service.device.dropping_rate}"
+          #here we need to decide a valid dripping rate policy
+          if service.processing_policy.dropping_rate != nil && service.processing_policy.dropping_rate < 0.40
+            #puts "Dropping rate for selected service is #{service.dropping_rate}"
+            puts "Resources will not be reallocated"
+            return
+          end
           if rand > 0.5
             # simulate a peak of interest
             scale = speed_up.round
