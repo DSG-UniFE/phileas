@@ -79,6 +79,8 @@ module Phileas
       # adjust this parameter
       @serv_speedup_rv = ERV::RandomVariable.new(distribution: :gaussian, args: { mean: 0.02, sd: 0.001 })
 
+      @first_su_event = true
+
       #voi benchmark  file
       time = Time.now.strftime('%Y%m%d%H%M%S')
 
@@ -91,7 +93,7 @@ module Phileas
       @services_benchmark = File.open("#{OUTPUT_SIM_FOLDER}/sim_services_data#{time}.csv", 'w')
       @services_benchmark << "CurrentTime,MsgType,MsgContentType,Dropped,ResourcesRequirements,AvailableResources,ActiveServices,EdgeResourcesUsed,Device\n"
       @resources_allocation = File.open("#{OUTPUT_SIM_FOLDER}/resources_allocation_data#{time}.csv", 'w')
-      @resources_allocation << "CurrentTime,Service,Device,CoreNumber,Scale,DeviceResources,DesiredSpeedUp\n"
+      @resources_allocation << "CurrentTime,Service,Device,CoreNumber,Scale,DeviceResources\n"
       @device_utilization = File.open("#{OUTPUT_SIM_FOLDER}/device_utilization#{time}.csv", 'w')
       @device_utilization << "CurrentTime,Device,Utilization,DeviceResources\n"
       @speed_up_event_benchmark = File.open("#{OUTPUT_SIM_FOLDER}/speed_up_event_benchmark#{time}.csv", 'w')
@@ -212,6 +214,15 @@ module Phileas
 
 
         when Event::ET_SERVICE_SPEEDUP
+=begin
+          if @first_su_event
+            @active_service_repository.find_active_services(@current_time).each do |s|
+              #puts "Benchmarking reallocation data for service #{s.output_content_type} on device: #{s.device} at time #{@current_time}"
+              @resources_allocation << "#{@current_time},#{s.output_content_type},#{s.device},#{s.resources_assigned},#{s.required_scale},#{s.device.resources}\n "
+            end
+            @first_su_event = false
+          end
+=end
           puts "ET_SERVICE_SPEEDUP event generated at time: #{@current_time}"
           @speed_up_event_benchmark << "#{@current_time}\n"
           # for each ET_SERVICE_SPEEDUP event select a service randomly
@@ -272,7 +283,7 @@ module Phileas
           end
           @active_service_repository.find_active_services(@current_time).each do |s|
             #puts "Benchmarking reallocation data for service #{s.output_content_type} on device: #{s.device} at time #{@current_time}"
-            @resources_allocation << "#{@current_time},#{s.output_content_type},#{s.device},#{s.resources_assigned},#{s.required_scale},#{s.device.resources},#{s.numerical_speed_up}\n "
+            @resources_allocation << "#{@current_time},#{s.output_content_type},#{s.device},#{s.resources_assigned},#{s.required_scale},#{s.device.resources}\n "
           end
           schedule_speed_up_event_generation
 
