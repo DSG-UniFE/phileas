@@ -236,11 +236,15 @@ module Phileas
           #calculate the numerical speed_up
           #puts "Dropping rate for selected service #{service} is #{service.device.dropping_rate}"
           #here we need to decide a valid dripping rate policy
-          if service.processing_policy.dropping_rate != nil && service.processing_policy.dropping_rate < 0.40
-            #puts "Dropping rate for selected service is #{service.dropping_rate}"
-            puts "Resources will not be reallocated"
-            return
-          end
+          #!!!!!!
+          #!!!!! redo this one
+          
+          #if service.processing_policy.dropping_rate != nil && service.processing_policy.dropping_rate < 0.40
+          #  #puts "Dropping rate for selected service is #{service.dropping_rate}"
+          #  puts "Resources will not be reallocated"
+          #  return
+          #end
+          
           if rand > 0.5
             # simulate a peak of interest
             scale = speed_up.round
