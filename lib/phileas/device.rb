@@ -9,6 +9,9 @@ module Phileas
 
     NO_RESOURCES = 0.0
 
+    # each service component should have a total 
+    # number of resources equals to one of following element
+    FEASIBILE_PARTITION = [1, 2, 3, 4, 6, 8, 9, 12, 16]
     def initialize(resources:, location:)
       @resource_pool = resources
       @total_resources_required = NO_RESOURCES
@@ -82,7 +85,7 @@ module Phileas
         #@total_resources_required = rr
         @total_resources_required = @services.inject(0) {|sum, x| sum += x.resource_requirements}
         allocated_cores = 0.0
-        @services.each do |x|
+        @services.sort_by {|el| -(el[:resource_requirements])}.each do |x|
           log_base = x.speed_up[:base]
           log_exp = x.speed_up[:exp]
           unless allocable_resources === 0
@@ -107,13 +110,18 @@ module Phileas
                 service_resources = service_resources_tmp.round.to_f
               end
             end
+            # here service_resources is the total number of assigned resource
+            raise "#{service_resources} is not a feasible partition" unless FEASIBILE_PARTITION.include? service_resources
             allocable_resources -= service_resources.to_f
-            #puts "Resources assigned: #{service_resources}"
+            # puts "Resources assigned: #{service_resources}"
+            # just calculate the speedup here
             x.numerical_speed_up = service_resources ** Math::log(log_exp, log_base) - x.resources_assigned ** Math::log(log_exp, log_base)
             x.assign_resources(service_resources)
             allocated_cores +=  service_resources
             x.resources_assigned = service_resources.to_f
           else
+            # 0.0 value should be feasible here --- it means the application is not running
+            # or scheduled on this device
             x.assign_resources(0.0)
             x.resources_assigned = 0.0
             x.numerical_speed_up = 0.0 ** Math::log(log_exp, log_base) - x.resources_assigned ** Math::log(log_exp, log_base)
@@ -135,10 +143,11 @@ module Phileas
 
   def reallocate_res_greedy
     allocable_resources = @resource_pool
-    allocated_cores = 0.0
+    allocated_cores = 0
     allocation_map = []
-    @services.each do |x|
-      puts "Dropping rate for #{x.output_content_type} is #{x.dropping_rate}"
+    @services.sort_by! {|el| -(el.resource_requirements)}.each do |x|
+    #@services.each do |x|
+    puts "Dropping rate for #{x.output_content_type} is #{x.dropping_rate}"
       unless allocable_resources === 0
         #puts "Requirements #{x.resource_requirements.to_f } for Service: #{x.output_content_type}"
         service_resources_tmp = ( (x.resource_requirements.to_f / @total_resources_required.to_f) * @resource_pool).round
@@ -147,25 +156,60 @@ module Phileas
         else
           service_resources = service_resources_tmp.round
         end
+            # here service_resources is the total number of assigned resource
+        unless FEASIBILE_PARTITION.include? service_resources
+          puts "Infeasible partition generated"
+          closest_partition = FEASIBILE_PARTITION.min_by{|x| (service_resources - x).abs}
+          if closest_partition > allocable_resources
+            # get the closet allocable partition
+            closest_partition = FEASIBILE_PARTITION.min_by{|x| (allocable_resources -x).abs}
+          end
+          service_resources = closest_partition
+        end
+        
+        raise "#{service_resources} is not a feasible partition" unless FEASIBILE_PARTITION.include? service_resources
+
         #puts "About to assign #{service_resources} for Service: #{x.output_content_type}"
-        allocable_resources -= service_resources.round
-        x.assign_resources(service_resources)
-        allocated_cores +=  service_resources
+        allocable_resources -= service_resources.to_f
+        # fix this bug
+        x.assign_resources(service_resources.to_f)
         x.resources_assigned = service_resources.to_f
+        allocated_cores +=  service_resources.to_f
         allocation_map << service_resources
+      else
+        x.assign_resources(0.0)
+        x.resources_assigned = 0.0
       end
     end
     # increment randomly resource assigned to the minimum services
     min_index = allocation_map.each_with_index.min 
-    #puts "Allocation_map #{allocation_map} Still to allocate #{allocable_resources} min_index: #{min_index}"
-    while allocable_resources.round > 0.0 do 
+    puts "Allocation_map #{allocation_map} Still to allocate #{allocable_resources} min_index: #{min_index}"
+    if allocable_resources > 0
+      s_assigned = @services[min_index[1]].resources_assigned
+      @services[min_index[1]].assign_resources(s_assigned + 1.0)
+      @services[min_index[1]].resources_assigned = s_assigned + 1.0
+      allocable_resources -= 1.0
+      allocated_cores += 1.0
+    end
+
+=begin
+    max_iteration = @services.length * 2
+    iter = 0
+    while (allocable_resources > 0 && iter < max_iteration) do 
+      puts "Allocable cores #{allocable_resources}"
       service_index = min_index.sample
       s_assigned = @services[service_index].resources_assigned + 1.0
-      @services[service_index].assign_resources(s_assigned)
-      @services[service_index].resources_assigned = s_assigned 
-      allocable_resources -= 1
-      allocated_cores += 1
+      if FEASIBILE_PARTITION.include? s_assigned
+        @services[service_index].assign_resources(s_assigned)
+        #@services[service_index].resources_assigned = s_assigned 
+        allocable_resources -= 1
+        allocated_cores += 1
+        puts "Updated partition for service index: #{service_index}"
+      end
+      iter +=1
     end
+=end
+
     puts "**** Allocated cores #{allocated_cores}/#{@resource_pool} for #{@services.length} services ***"
     raise "Error! Allocated #{allocated_cores}" if allocated_cores.to_f > @resource_pool.to_f
     resources_check = 0.0
@@ -174,7 +218,7 @@ module Phileas
       puts "#{x.output_content_type} is using #{x.resources_assigned}/#{@resource_pool}"
     end
     @total_resources_required = @services.inject(0) {|sum, x| sum += x.resources_assigned}
-    puts "**** End Allocated cores total_resource_required is #{@total_resources_required} ***"
+    puts "**** End Allocated cores, allocated: #{resources_check} ****" #total_resource_required is #{@total_resources_required} ***"
   end
   end
 

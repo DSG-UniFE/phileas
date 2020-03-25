@@ -255,8 +255,8 @@ module Phileas
           #  puts "Resources will not be reallocated"
           #  return
           #end
-          
-          if rand > 0.5
+          # uniform distributed ---- 
+          if rand > 0.35
             # simulate a peak of interest
             scale = speed_up.round
           else
