@@ -34,6 +34,13 @@ module Phileas
       active_services
     end
 
+    def find_active_services_at_device(cur_time, device)
+      active_services = @services.select do |s|
+        s.device == device && s.activation_time&.to_time&.to_f <= cur_time
+      end
+      active_services
+    end
+
     def length
       @services.length
     end

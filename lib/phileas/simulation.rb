@@ -81,6 +81,9 @@ module Phileas
 
       @first_su_event = true
 
+      # selected device for speed up events --- for wrting purposes
+      @selected_device_su = nil
+
       #voi benchmark  file
       time = Time.now.strftime('%Y%m%d%H%M%S')
 
@@ -139,6 +142,11 @@ module Phileas
       schedule_next_change_position_event_generation if @configuration.mobility_enabled
 
       current_event = 0
+
+      # select a device for speed-up events
+      @selected_device_su  = @device_repository[rand(@device_repository.length)]
+
+      puts "Selected device for speed-up events is: #{@selected_device_su}"
 
       # launch simulation
       until @event_queue.empty?
@@ -225,10 +233,16 @@ module Phileas
 =end
           puts "ET_SERVICE_SPEEDUP event generated at time: #{@current_time}"
           @speed_up_event_benchmark << "#{@current_time}\n"
+          
           # for each ET_SERVICE_SPEEDUP event select a service randomly
-          selected_service = rand(@active_service_repository.find_active_services(@current_time).length)
-          service = @active_service_repository.find_active_services(@current_time)[selected_service]
-          puts "Service #{service} #{service.dropping_rate}"
+          # for writing purposes we want to select just one device for the entire simulation
+          # so the device will be the same for all speed up events
+          #
+          selected_service = rand(@active_service_repository.find_active_services_at_device(@current_time, @selected_device_su).length)
+          service = @active_service_repository.find_active_services_at_device(@current_time, @selected_device_su)[selected_service]
+          #
+          #
+          puts "Service #{service} #{service.dropping_rate} running on device: #{@selected_device_su}"
           dev_cores = service.device.resources
           used_cores = dev_cores - service.device.available_resources
           puts "Reallocating resources for service #{service.output_content_type}, now using: #{service.resources_assigned} Device Status: #{used_cores} / #{dev_cores}"
