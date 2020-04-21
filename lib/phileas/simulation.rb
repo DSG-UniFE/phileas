@@ -256,7 +256,7 @@ module Phileas
           #  return
           #end
           # uniform distributed ---- 
-          if rand > 0.35
+          if rand > 0.50
             # simulate a peak of interest
             scale = speed_up.round
           else
@@ -367,7 +367,8 @@ module Phileas
           # schedule a reallocation event each 1800 seconds
           # an improvements here, it is select also a location and the reallocate
           # the resource only for the devices nearby
-          time_to_next_generation = 1800.to_f
+          # 9000 instead of 1800
+          time_to_next_generation = 900.to_f
           puts "Current time: #{@current_time} \t Time to next generation  #{time_to_next_generation}"
           new_event(Event::ET_SERVICE_SPEEDUP, [scale], @current_time + time_to_next_generation)
         end
