@@ -156,7 +156,7 @@ module Phileas
       unless allocable_resources === 0
         #puts "Requirements #{x.resource_requirements.to_f } for Service: #{x.output_content_type}"
         service_resources_tmp = ( (x.resource_requirements.to_f / @total_resources_required.to_f) * @resource_pool).round
-        if service_resources_tmp > allocable_resources 
+        if service_resources_tmp >= allocable_resources 
           service_resources = allocable_resources.round
         else
           service_resources = service_resources_tmp.round
@@ -164,10 +164,14 @@ module Phileas
             # here service_resources is the total number of assigned resource
         unless FEASIBILE_PARTITION.include? service_resources
           puts "Infeasible partition generated"
+          # please refactor the code here
           closest_partition = FEASIBILE_PARTITION.min_by{|x| (service_resources - x).abs}
+          puts "Checking if #{closest_partition} is feasible with resources #{allocable_resources}"
           if closest_partition > allocable_resources
             # get the closet allocable partition
-            closest_partition = FEASIBILE_PARTITION.min_by{|x| (allocable_resources -x).abs}
+            closest_partition = FEASIBILE_PARTITION.
+              select{|x| x <= allocable_resources }.min_by{|x| (service_resources - x).abs}
+            puts "partition generated #{closest_partition} on #{allocable_resources}"
           end
           service_resources = closest_partition
         end
@@ -189,7 +193,7 @@ module Phileas
     # increment randomly resource assigned to the minimum services
     min_index = allocation_map.each_with_index.min 
     puts "Allocation_map #{allocation_map} Still to allocate #{allocable_resources} min_index: #{min_index}"
-    if allocable_resources > 0..00
+    if allocable_resources > 0
       s_assigned = @services[min_index[1]].resources_assigned
       @services[min_index[1]].assign_resources(s_assigned + 1.0)
       @services[min_index[1]].resources_assigned = s_assigned + 1.0
@@ -198,6 +202,7 @@ module Phileas
       allocated_cores += 1.0
     end
 
+    puts "Before g_check allocated_cores #{allocated_cores}"
     #geometrical constraint check here
     while (allocation_map & INFEASIBLE_ALLOCATION).size == INFEASIBLE_ALLOCATION.size do
       puts "Allocation not respecting geometrical constraints"
