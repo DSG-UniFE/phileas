@@ -249,6 +249,8 @@ module Phileas
     resources_check = 0.0
     @services.each do |x|
       # reset also the required scale
+      x.resource_requirements -= x.required_scale
+      x.resource_requirements = 0.0 if x.resource_requirements < 0.0
       x.required_scale = 0.0
       resources_check += x.resources_assigned
       puts "#{x.output_content_type} is using #{x.resources_assigned}/#{@resource_pool}"

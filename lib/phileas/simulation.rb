@@ -222,15 +222,7 @@ module Phileas
 
 
         when Event::ET_SERVICE_SPEEDUP
-=begin
-          if @first_su_event
-            @active_service_repository.find_active_services(@current_time).each do |s|
-              #puts "Benchmarking reallocation data for service #{s.output_content_type} on device: #{s.device} at time #{@current_time}"
-              @resources_allocation << "#{@current_time},#{s.output_content_type},#{s.device},#{s.resources_assigned},#{s.required_scale},#{s.device.resources}\n "
-            end
-            @first_su_event = false
-          end
-=end
+          
           puts "ET_SERVICE_SPEEDUP event generated at time: #{@current_time}"
           @speed_up_event_benchmark << "#{@current_time}\n"
           
@@ -238,11 +230,15 @@ module Phileas
           # for writing purposes we want to select just one device for the entire simulation
           # so the device will be the same for all speed up events
           #
-          selected_service = rand(@active_service_repository.find_active_services_at_device(@current_time, @selected_device_su).length)
-          service = @active_service_repository.find_active_services_at_device(@current_time, @selected_device_su)[selected_service]
+          # for each device
+          @device_repository.each do |_,selected_device|
+            next if selected_device.nil? || selected_device.type == :cloud
+          #puts "Selected device is: #{selected_device}"
+          selected_service = rand(@active_service_repository.find_active_services_at_device(@current_time, selected_device).length)
+          service = @active_service_repository.find_active_services_at_device(@current_time, selected_device)[selected_service]
           #
           #
-          puts "Service #{service} #{service.dropping_rate} running on device: #{@selected_device_su}"
+          puts "Service #{service} #{service.dropping_rate} running on device: #{selected_device}"
           dev_cores = service.device.resources
           used_cores = dev_cores - service.device.available_resources
           puts "Reallocating resources for service #{service.output_content_type}, now using: #{service.resources_assigned} Device Status: #{used_cores} / #{dev_cores}"
@@ -288,6 +284,8 @@ module Phileas
             if ug.nearby?(service.device.location)
                ug.update_interest(service.output_content_type, scale)
             end
+          end
+
           end
           # collect the data regarding device_utilization
           @device_repository.each do |dev|
