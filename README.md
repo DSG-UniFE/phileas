@@ -1,39 +1,43 @@
 # Phileas
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/phileas`. To experiment with that code, run `bin/console` for an interactive prompt.
+Phileas is a discrete event simulator for Fog Computing scenario. It allows the realistic modelling of Internet of Things (IoT) sensors, devices, and users to allow the reproducible evaluation of Fog applications in a realistic environment.
 
-TODO: Delete this and the text above, and describe your gem
+Phileas is based on 6 main concepts: locations, data sources, devices, service types, service activations, and user groups. Phileas models locations in a realistic fashion, associating geographical latitude and longitude coordinates to them. All entities modeled by Phileas, such as data sources, devices, and users are placed in a specific location. Geodesic distance between locations is calculated according to Vincenty’s formula, which leverages an accurate ellipsoidal model of the Earth and is significantly more accurate than the simpler and more popular Haversine formula.
 
 ## Installation
 
-Add this line to your application's Gemfile:
+For starting clone this repository:
+    $ git clone https://github.com/DSG-UniFE/phileas.git
 
-```ruby
-gem 'phileas'
-```
-
-And then execute:
+And then execute to install required gems:
 
     $ bundle
 
-Or install it yourself as:
+Or you can install them inside the phileas directory:
 
-    $ gem install phileas
+    $ bundle install --path vendor/bundle
 
-## Usage
+## Getting started
 
-TODO: Write usage instructions here
+Before running a simulation, you need to define a configuration file containing the description of the scenario to simulate. The scenario is a Ruby configuration file that contains the description of locations, data sources, devices, user groups, and services.
+
+Take a look at the `example` folder to familiarize yourself with a configuration file.
+
+To run the example scenario `example/example_scenario.conf`
+	$ bundle exec exe/phileas example/example_scenario.conf
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+Phileas is currenlty under development.
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/phileas.
+Bug reports and pull requests are welcome on GitHub at https://github.com/[DSG-UniFE]/phileas.
 
 ## License
 
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+
+# References
+
+1. Filippo  Poltronieri,  Cesare  Stefanelli,  Niranjan  Suri,  and  Mauro  Tortonesi.Phileas:  Asimulation-based approach for the evaluation of value-based fog services.  In 2018 IEEE23rd International Workshop on Computer Aided Modeling and Design of CommunicationLinks and Networks (CAMAD), pages 1–6. IEEE, 2018.
