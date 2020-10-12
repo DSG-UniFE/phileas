@@ -61,11 +61,11 @@ module Phileas
       # setup latency manager
       @latency_manager = LatencyManager.new
 
-      #voi benchmark  file
+      # benchmarking  files
       time = Time.now.strftime('%Y%m%d%H%M%S')
       @voi_benchmark = File.open("sim_voi_data#{time}.csv", 'w')
       @voi_benchmark  << "CurrentTime,InputVoI,OriginatingTime,Users,OutputVoI,ContentType,ActiveServices\n"
-      #services benchmakr file (aggregated/dropped/ messages) resources' status
+      #services benchmark file (aggregated/dropped/ messages) resources' status
       @services_benchmark = File.open("sim_services_data#{time}.csv", 'w')
       @services_benchmark << "CurrentTime,MsgType,MsgContentType,Dropped,ResourcesRequirements,AvailableResources,ActiveServices,EdgeResourcesUsed\n"
     end
@@ -181,8 +181,8 @@ module Phileas
       @services_benchmark.close
       @state = :not_running
       @event_queue = nil
-      `Rscript --vanilla bin/generate_plots.r #{@voi_benchmark.path}`
-      puts "File for benchmarking: #{@voi_benchmark.path}"
+      #`Rscript --vanilla bin/generate_plots.r #{@voi_benchmark.path}`
+      #puts "File for benchmarking: #{@voi_benchmark.path}"
     end
 
     # TODO: consider refactoring the following methods and moving them out of the Simulator class
