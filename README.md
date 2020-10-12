@@ -21,7 +21,7 @@ Or you can install them inside the phileas directory:
 
 Before running a simulation, you need to define a configuration file containing the description of the scenario to simulate. The scenario is a Ruby configuration file that contains the description of locations, data sources, devices, user groups, and services.
 
-Take a look at the `example` folder to familiarize yourself with a configuration file.
+Take a look at the `example` folder to familiarize with configuration files.
 
 To run the example scenario `example/example_scenario.conf`
 	$ bundle exec exe/phileas example/example_scenario.conf
