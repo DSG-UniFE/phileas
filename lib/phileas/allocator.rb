@@ -5,7 +5,6 @@ require 'forwardable'
 
 module Phileas
   class ClosestDevicePolicy
-    # TODO: does strategy pattern use class or instance methods?
     def allocate(service:, devices:)
       data_source_location = service.data_source_location
       devices.sort_by {|d| distance(data_source_location, d.location) }.first
