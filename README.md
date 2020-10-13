@@ -24,7 +24,8 @@ Before running a simulation, you need to define a configuration file containing 
 Take a look at the `example` folder to familiarize with configuration files.
 
 To run the example scenario `example/example_scenario.conf`
-	$ bundle exec exe/phileas example/example_scenario.conf
+
+    $ bundle exec exe/phileas example/example_scenario.conf
 
 ## Development
 
