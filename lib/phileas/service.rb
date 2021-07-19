@@ -32,7 +32,8 @@ module Phileas
 
     def dropping_rate
       dropping_rate = @dropped_messages / (@processed_messages + @dropped_messages).to_f
-      puts "Dropping rate #{dropping_rate}"
+      #puts "Dropping rate #{dropping_rate}"
+      dropping_rate
     end
 
     def process_message_with_voi(value)
@@ -120,6 +121,7 @@ module Phileas
       # create processing_policy object
       @processing_policy = Phileas.const_get(klass_name).new(processing_policy_configuration)
     end
+
 
     def incoming_message(msg, time)
       voi_left = msg.remaining_voi_at(time: time, location: @device.location)
